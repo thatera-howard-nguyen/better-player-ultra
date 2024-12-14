@@ -246,8 +246,13 @@ class BetterPlayerController {
     ///Build videoPlayerController if null
     if (videoPlayerController == null) {
       videoPlayerController = VideoPlayerController(
-          bufferingConfiguration:
-              betterPlayerDataSource.bufferingConfiguration);
+        bufferingConfiguration: betterPlayerDataSource.bufferingConfiguration,
+      );
+      // Even though the player is being created at this moment,
+      // we let OS know to mix with others before the player is created, so we don't
+      // mute other sources at all. Audio session mix is not connected with the player.
+      videoPlayerController
+          ?.setMixWithOthers(betterPlayerConfiguration.mixWithOthers);
       videoPlayerController?.addListener(_onVideoPlayerChanged);
     }
 

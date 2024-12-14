@@ -118,6 +118,10 @@ class BetterPlayerConfiguration {
   ///Default value is false.
   final bool useRootNavigator;
 
+  /// Set this to true to mix video players audio with other audio sources.
+  /// The default value is false
+  final bool mixWithOthers;
+
   const BetterPlayerConfiguration({
     this.aspectRatio,
     this.autoPlay = false,
@@ -156,6 +160,7 @@ class BetterPlayerConfiguration {
     this.autoDispose = true,
     this.expandToFill = true,
     this.useRootNavigator = false,
+    this.mixWithOthers = false,
   });
 
   BetterPlayerConfiguration copyWith({
@@ -188,6 +193,7 @@ class BetterPlayerConfiguration {
     bool? autoDispose,
     bool? expandToFill,
     bool? useRootNavigator,
+    bool? mixWithOthers,
   }) {
     return BetterPlayerConfiguration(
       aspectRatio: aspectRatio ?? this.aspectRatio,
@@ -228,6 +234,7 @@ class BetterPlayerConfiguration {
       autoDispose: autoDispose ?? this.autoDispose,
       expandToFill: expandToFill ?? this.expandToFill,
       useRootNavigator: useRootNavigator ?? this.useRootNavigator,
+      mixWithOthers: mixWithOthers ?? this.mixWithOthers,
     );
   }
 }

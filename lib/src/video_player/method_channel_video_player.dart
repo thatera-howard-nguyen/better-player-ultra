@@ -270,11 +270,10 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> setMixWithOthers(int? textureId, bool mixWithOthers) {
+  Future<void> setMixWithOthers(bool mixWithOthers) {
     return _channel.invokeMethod<void>(
       'setMixWithOthers',
       <String, dynamic>{
-        'textureId': textureId,
         'mixWithOthers': mixWithOthers,
       },
     );

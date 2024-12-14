@@ -78,7 +78,6 @@ bool _remoteCommandsInitialized = false;
                                          eventChannelWithName:[NSString stringWithFormat:@"better_player_channel/videoEvents%lld",
                                                                textureId]
                                          binaryMessenger:_messenger];
-    [player setMixWithOthers:false];
     [eventChannel setStreamHandler:player];
     player.eventChannel = eventChannel;
     _players[@(textureId)] = player;
@@ -276,6 +275,19 @@ bool _remoteCommandsInitialized = false;
 
 }
 
+- (void) setMixWithOthers:(BOOL)mixWithOthers {
+#if TARGET_OS_OSX
+  // AVAudioSession doesn't exist on macOS, and audio always mixes, so just no-op.
+#else
+  if (mixWithOthers) {
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+                                     withOptions:AVAudioSessionCategoryOptionMixWithOthers
+                                           error:nil];
+  } else {
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+  }
+#endif
+}
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
 
@@ -291,6 +303,8 @@ bool _remoteCommandsInitialized = false;
     } else if ([@"create" isEqualToString:call.method]) {
         BetterPlayer* player = [[BetterPlayer alloc] initWithFrame:CGRectZero];
         [self onPlayerSetup:player result:result];
+    } else if([@"setMixWithOthers" isEqualToString:call.method]) {
+        [self setMixWithOthers:call.arguments[@"mixWithOthers"]];
     } else {
         NSDictionary* argsMap = call.arguments;
         int64_t textureId = ((NSNumber*)argsMap[@"textureId"]).unsignedIntegerValue;
@@ -420,8 +434,6 @@ bool _remoteCommandsInitialized = false;
             NSString* name = argsMap[@"name"];
             int index = [argsMap[@"index"] intValue];
             [player setAudioTrack:name index: index];
-        } else if ([@"setMixWithOthers" isEqualToString:call.method]){
-            [player setMixWithOthers:[argsMap[@"mixWithOthers"] boolValue]];
         } else if ([@"preCache" isEqualToString:call.method]){
             NSDictionary* dataSource = argsMap[@"dataSource"];
             NSString* urlArg = dataSource[@"uri"];

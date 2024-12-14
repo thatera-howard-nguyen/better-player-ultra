@@ -710,17 +710,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 }
 
-- (void)setMixWithOthers:(bool)mixWithOthers {
-  if (mixWithOthers) {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
-                                     withOptions:AVAudioSessionCategoryOptionMixWithOthers
-                                           error:nil];
-  } else {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-  }
-}
-
-
 #endif
 
 - (FlutterError* _Nullable)onCancelWithArguments:(id _Nullable)arguments {
