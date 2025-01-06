@@ -279,13 +279,17 @@ bool _remoteCommandsInitialized = false;
 #if TARGET_OS_OSX
   // AVAudioSession doesn't exist on macOS, and audio always mixes, so just no-op.
 #else
+  AVAudioSession *session = [AVAudioSession sharedInstance];
   if (mixWithOthers) {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
-                                     withOptions:AVAudioSessionCategoryOptionMixWithOthers
-                                           error:nil];
+      [session setCategory:AVAudioSessionCategoryPlayback
+               withOptions:AVAudioSessionCategoryOptionMixWithOthers
+                     error:nil];
+      [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
   } else {
-      [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
-                                              error:nil];
+      [session setCategory:AVAudioSessionCategoryPlayback
+               withOptions:0
+                     error:nil];
+      [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
   }
 #endif
 }
