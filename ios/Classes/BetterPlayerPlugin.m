@@ -284,7 +284,8 @@ bool _remoteCommandsInitialized = false;
                                      withOptions:AVAudioSessionCategoryOptionMixWithOthers
                                            error:nil];
   } else {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+      [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+                                              error:nil];
   }
 #endif
 }
@@ -304,7 +305,8 @@ bool _remoteCommandsInitialized = false;
         BetterPlayer* player = [[BetterPlayer alloc] initWithFrame:CGRectZero];
         [self onPlayerSetup:player result:result];
     } else if([@"setMixWithOthers" isEqualToString:call.method]) {
-        [self setMixWithOthers:call.arguments[@"mixWithOthers"]];
+        BOOL mixWithOthers = [call.arguments[@"mixWithOthers"] boolValue];
+        [self setMixWithOthers:mixWithOthers];
     } else {
         NSDictionary* argsMap = call.arguments;
         int64_t textureId = ((NSNumber*)argsMap[@"textureId"]).unsignedIntegerValue;
