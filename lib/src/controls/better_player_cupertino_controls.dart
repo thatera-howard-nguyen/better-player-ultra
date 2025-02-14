@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 
 class BetterPlayerCupertinoControls extends StatefulWidget {
   ///Callback used to send information if player bar is hidden or not
-  final Function(bool visbility) onControlsVisibilityChanged;
+  final Function(bool visibility) onControlsVisibilityChanged;
 
   ///Controls config
   final BetterPlayerControlsConfiguration controlsConfiguration;
@@ -788,7 +788,7 @@ class _BetterPlayerCupertinoControlsState
                     right: buttonPadding,
                   ),
                   decoration: BoxDecoration(
-                    color: backgroundColor.withOpacity(0.5),
+                    color: backgroundColor.withValues(alpha: .5),
                   ),
                   child: Center(
                     child: Icon(

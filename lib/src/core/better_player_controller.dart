@@ -483,7 +483,7 @@ class BetterPlayerController {
         if (!file.existsSync()) {
           BetterPlayerUtils.log(
               "File ${file.path} doesn't exists. This may be because "
-              "you're acessing file from native path and Flutter doesn't "
+              "you're accessing file from native path and Flutter doesn't "
               "recognize this path.");
         }
 
@@ -526,10 +526,6 @@ class BetterPlayerController {
           throw ArgumentError("Couldn't create file from memory.");
         }
         break;
-
-      default:
-        throw UnimplementedError(
-            "${betterPlayerDataSource.type} is not implemented");
     }
     await _initializeVideo();
   }
@@ -852,9 +848,8 @@ class BetterPlayerController {
     if (_nextVideoTimer == null) {
       if (betterPlayerPlaylistConfiguration == null) {
         BetterPlayerUtils.log(
-            "BettterPlayerPlaylistConifugration has not been set!");
-        throw StateError(
-            "BettterPlayerPlaylistConifugration has not been set!");
+            "BetterPlayerPlaylistConfiguration has not been set!");
+        throw StateError("BetterPlayerPlaylistConfiguration has not been set!");
       }
 
       _nextVideoTime =
@@ -1170,8 +1165,7 @@ class BetterPlayerController {
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.bufferingEnd));
         break;
       default:
-
-        ///TODO: Handle when needed
+        BetterPlayerUtils.log("Unhandled event type: ${event.eventType}");
         break;
     }
   }
@@ -1265,8 +1259,10 @@ class BetterPlayerController {
   ///cache started for given [betterPlayerDataSource] then it will be ignored.
   Future<void> stopPreCache(
       BetterPlayerDataSource betterPlayerDataSource) async {
-    return VideoPlayerController?.stopPreCache(betterPlayerDataSource.url,
-        betterPlayerDataSource.cacheConfiguration?.key);
+    return VideoPlayerController.stopPreCache(
+      betterPlayerDataSource.url,
+      betterPlayerDataSource.cacheConfiguration?.key,
+    );
   }
 
   /// Sets the new [betterPlayerControlsConfiguration] instance in the
