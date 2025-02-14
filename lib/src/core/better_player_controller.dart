@@ -248,11 +248,14 @@ class BetterPlayerController {
       videoPlayerController = VideoPlayerController(
         bufferingConfiguration: betterPlayerDataSource.bufferingConfiguration,
       );
-      // Even though the player is being created at this moment,
+      // iOS only: Even though the player is being created at this moment,
       // we let OS know to mix with others before the player is created, so we don't
       // mute other sources at all. Audio session mix is not connected with the player.
-      videoPlayerController
-          ?.setMixWithOthers(betterPlayerConfiguration.mixWithOthers);
+      if (Platform.isIOS) {
+        videoPlayerController
+            ?.setMixWithOthers(betterPlayerConfiguration.mixWithOthers);
+      }
+
       videoPlayerController?.addListener(_onVideoPlayerChanged);
     }
 
@@ -1178,6 +1181,8 @@ class BetterPlayerController {
 
   ///Retry data source if playback failed.
   Future retryDataSource() async {
+    // Remove listener which will be added again on _setupDataSource
+    videoPlayerController?.removeListener(_onVideoPlayerChanged);
     await _setupDataSource(_betterPlayerDataSource!);
     if (_videoPlayerValueOnError != null) {
       final position = _videoPlayerValueOnError!.position;

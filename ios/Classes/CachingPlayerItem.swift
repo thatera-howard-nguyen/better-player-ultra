@@ -65,9 +65,12 @@ open class CachingPlayerItem: AVPlayerItem {
         
         func startDataRequest(url: URL) {
             let configuration = URLSessionConfiguration.default
+            configuration.timeoutIntervalForResource = 3600
+            configuration.timeoutIntervalForRequest = 180
+            configuration.waitsForConnectivity = true
             configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
             session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
-            var request = URLRequest(url: url)
+            var request = URLRequest(url: url, timeoutInterval: 180)
             request.httpMethod = "GET"
             let headersString = self.headers as? [String:AnyObject]
             if let unwrappedDict = headersString {

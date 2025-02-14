@@ -202,12 +202,9 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     }
     
     AVPlayerItem* item;
-    if (useCache){
+    if (useCache && videoExtension != [NSNull null]){
         if (cacheKey == [NSNull null]){
             cacheKey = nil;
-        }
-        if (videoExtension == [NSNull null]){
-            videoExtension = nil;
         }
         
         item = [cacheManager getCachingPlayerItemForNormalPlayback:url cacheKey:cacheKey videoExtension: videoExtension headers:headers];

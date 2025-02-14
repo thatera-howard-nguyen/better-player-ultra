@@ -279,12 +279,17 @@ bool _remoteCommandsInitialized = false;
 #if TARGET_OS_OSX
   // AVAudioSession doesn't exist on macOS, and audio always mixes, so just no-op.
 #else
+  AVAudioSession *session = [AVAudioSession sharedInstance];
   if (mixWithOthers) {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
-                                     withOptions:AVAudioSessionCategoryOptionMixWithOthers
-                                           error:nil];
+      [session setCategory:AVAudioSessionCategoryPlayback
+               withOptions:AVAudioSessionCategoryOptionMixWithOthers
+                     error:nil];
+      [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
   } else {
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+      [session setCategory:AVAudioSessionCategoryPlayback
+               withOptions:0
+                     error:nil];
+      [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
   }
 #endif
 }
@@ -304,7 +309,8 @@ bool _remoteCommandsInitialized = false;
         BetterPlayer* player = [[BetterPlayer alloc] initWithFrame:CGRectZero];
         [self onPlayerSetup:player result:result];
     } else if([@"setMixWithOthers" isEqualToString:call.method]) {
-        [self setMixWithOthers:call.arguments[@"mixWithOthers"]];
+        BOOL mixWithOthers = [call.arguments[@"mixWithOthers"] boolValue];
+        [self setMixWithOthers:mixWithOthers];
     } else {
         NSDictionary* argsMap = call.arguments;
         int64_t textureId = ((NSNumber*)argsMap[@"textureId"]).unsignedIntegerValue;
