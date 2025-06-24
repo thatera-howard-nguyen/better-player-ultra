@@ -21,6 +21,7 @@ import 'package:example/pages/normal_player_page.dart';
 import 'package:example/pages/notification_player_page.dart';
 import 'package:example/pages/overridden_aspect_ratio_page.dart';
 import 'package:example/pages/overriden_duration_page.dart';
+import 'package:example/pages/overlay_touch_test_page.dart';
 import 'package:example/pages/placeholder_until_play_page.dart';
 import 'package:example/pages/playlist_page.dart';
 import 'package:example/pages/resolutions_page.dart';
@@ -161,6 +162,9 @@ class _WelcomePageState extends State<WelcomePage> {
       }),
       _buildExampleElementWidget("DASH", () {
         _navigateToPage(DashPage());
+      }),
+      _buildExampleElementWidget("Overlay touch test", () {
+        _navigateToPage(OverlayTouchTestPage());
       }),
     ];
   }

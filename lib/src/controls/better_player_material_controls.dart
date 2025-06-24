@@ -71,28 +71,35 @@ class _BetterPlayerMaterialControlsState
         child: _buildErrorWidget(),
       );
     }
+    
+    // If controls are disabled, return SizedBox to allow overlay touch events
+    if (!betterPlayerController!.controlsEnabled) {
+      return const SizedBox();
+    }
+    
     return GestureDetector(
-      onTap: () {
+      onTap: betterPlayerController!.controlsEnabled ? () {
         if (BetterPlayerMultipleGestureDetector.of(context) != null) {
           BetterPlayerMultipleGestureDetector.of(context)!.onTap?.call();
         }
         controlsNotVisible
             ? cancelAndRestartTimer()
             : changePlayerControlsNotVisible(true);
-      },
-      onDoubleTap: () {
+      } : null,
+      onDoubleTap: betterPlayerController!.controlsEnabled ? () {
         if (BetterPlayerMultipleGestureDetector.of(context) != null) {
           BetterPlayerMultipleGestureDetector.of(context)!.onDoubleTap?.call();
         }
         cancelAndRestartTimer();
-      },
-      onLongPress: () {
+      } : null,
+      onLongPress: betterPlayerController!.controlsEnabled ? () {
         if (BetterPlayerMultipleGestureDetector.of(context) != null) {
           BetterPlayerMultipleGestureDetector.of(context)!.onLongPress?.call();
         }
-      },
+      } : null,
       child: AbsorbPointer(
-        absorbing: controlsNotVisible,
+        absorbing:
+            controlsNotVisible && betterPlayerController!.controlsEnabled,
         child: Stack(
           fit: StackFit.expand,
           children: [

@@ -64,6 +64,18 @@ class _ControllerControlsPageState extends State<ControllerControlsPage> {
                   _betterPlayerController.setControlsVisibility(true);
                 },
               ),
+              TextButton(
+                child: Text("Disable controls"),
+                onPressed: () {
+                  _betterPlayerController.setControlsEnabled(false);
+                },
+              ),
+              TextButton(
+                child: Text("Enable controls"),
+                onPressed: () {
+                  _betterPlayerController.setControlsEnabled(true);
+                },
+              ),
             ],
           )
         ],
