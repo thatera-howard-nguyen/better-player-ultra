@@ -161,6 +161,12 @@ class BetterPlayerControlsConfiguration {
   ///Color of text in bottom modal sheet used for overflow menu items.
   final Color overflowModalTextColor;
 
+  ///Widget to display below the seekbar
+  final Widget? widgetBelowSeekBar;
+
+  ///Widget to display on the left side of the top bar
+  final Widget? widgetInTopBarLeft;
+
   const BetterPlayerControlsConfiguration({
     this.controlBarColor = Colors.black87,
     this.textColor = Colors.white,
@@ -213,6 +219,8 @@ class BetterPlayerControlsConfiguration {
     this.backgroundColor = Colors.black,
     this.overflowModalColor = Colors.white,
     this.overflowModalTextColor = Colors.black,
+    this.widgetBelowSeekBar,
+    this.widgetInTopBarLeft,
   });
 
   factory BetterPlayerControlsConfiguration.white() {

@@ -45,6 +45,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
           placeholder: Image.network(
             Constants.catImageUrl,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: Icon(Icons.error),
+              );
+            },
           )),
     );
 
@@ -55,6 +61,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
         placeholder: Image.network(
           Constants.catImageUrl,
           fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: Icon(Icons.error),
+            );
+          },
         ),
       ),
     );
@@ -133,6 +145,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       placeholder: Image.network(
                         Constants.catImageUrl,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: Icon(Icons.error),
+                          );
+                        },
                       ),
                     )
                   ];

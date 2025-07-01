@@ -56,7 +56,15 @@ class _PlaceholderUntilPlayPageState extends State<PlaceholderUntilPlayPage> {
       stream: _placeholderStreamController.stream,
       builder: (context, snapshot) {
         return _showPlaceholder
-            ? Image.network(Constants.placeholderUrl)
+            ? Image.network(
+                Constants.placeholderUrl,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: Icon(Icons.error),
+                  );
+                },
+              )
             : const SizedBox();
       },
     );

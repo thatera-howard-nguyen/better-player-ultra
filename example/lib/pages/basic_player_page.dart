@@ -1,6 +1,5 @@
 import 'package:better_player/better_player.dart';
 import 'package:example/constants.dart';
-import 'package:example/utils.dart';
 import 'package:flutter/material.dart';
 
 class BasicPlayerPage extends StatefulWidget {
@@ -39,16 +38,6 @@ class _BasicPlayerPageState extends State<BasicPlayerPage> {
             ),
           ),
           const SizedBox(height: 8),
-          FutureBuilder<String>(
-            future: Utils.getFileUrl(Constants.fileTestVideoUrl),
-            builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-              if (snapshot.data != null) {
-                return BetterPlayer.file(snapshot.data!);
-              } else {
-                return const SizedBox();
-              }
-            },
-          )
         ],
       ),
     );

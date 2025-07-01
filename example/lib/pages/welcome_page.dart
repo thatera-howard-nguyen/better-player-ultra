@@ -30,6 +30,8 @@ import 'package:example/pages/rotation_and_fit_page.dart';
 import 'package:example/pages/subtitles_page.dart';
 import 'package:example/pages/video_list/video_list_page.dart';
 import 'package:example/pages/picture_in_picture_page.dart';
+import 'package:example/pages/widget_below_seekbar_page.dart';
+import 'package:example/pages/widget_in_topbar_left_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -60,11 +62,6 @@ class _WelcomePageState extends State<WelcomePage> {
         child: ListView(
           children: [
             const SizedBox(height: 8),
-            Image.asset(
-              "assets/logo.png",
-              height: 200,
-              width: 200,
-            ),
             Text(
               "Welcome to Better Player example app. Click on any element below to see example.",
               style: TextStyle(fontSize: 16),
@@ -166,6 +163,12 @@ class _WelcomePageState extends State<WelcomePage> {
       _buildExampleElementWidget("Overlay touch test", () {
         _navigateToPage(OverlayTouchTestPage());
       }),
+      _buildExampleElementWidget("Widget Below Seekbar", () {
+        _navigateToPage(WidgetBelowSeekbarPage());
+      }),
+      _buildExampleElementWidget("Widget in Top Bar Left", () {
+        _navigateToPage(WidgetInTopbarLeftPage());
+      }),
     ];
   }
 
@@ -199,34 +202,50 @@ class _WelcomePageState extends State<WelcomePage> {
 
   ///Save subtitles to file, so we can use it later
   Future _saveAssetSubtitleToFile() async {
-    String content =
-        await rootBundle.loadString("assets/example_subtitles.srt");
-    final directory = await getApplicationDocumentsDirectory();
-    var file = File("${directory.path}/example_subtitles.srt");
-    file.writeAsString(content);
+    try {
+      String content =
+          await rootBundle.loadString("assets/example_subtitles.srt");
+      final directory = await getApplicationDocumentsDirectory();
+      var file = File("${directory.path}/example_subtitles.srt");
+      await file.writeAsString(content);
+    } catch (e) {
+      print("Failed to load subtitle asset: $e");
+    }
   }
 
   ///Save video to file, so we can use it later
   Future _saveAssetVideoToFile() async {
-    var content = await rootBundle.load("assets/testvideo.mp4");
-    final directory = await getApplicationDocumentsDirectory();
-    var file = File("${directory.path}/testvideo.mp4");
-    file.writeAsBytesSync(content.buffer.asUint8List());
+    try {
+      var content = await rootBundle.load("assets/testvideo.mp4");
+      final directory = await getApplicationDocumentsDirectory();
+      var file = File("${directory.path}/testvideo.mp4");
+      file.writeAsBytesSync(content.buffer.asUint8List());
+    } catch (e) {
+      print("Failed to load video asset: $e");
+    }
   }
 
   Future _saveAssetEncryptVideoToFile() async {
-    var content =
-        await rootBundle.load("assets/${Constants.fileTestVideoEncryptUrl}");
-    final directory = await getApplicationDocumentsDirectory();
-    var file = File("${directory.path}/${Constants.fileTestVideoEncryptUrl}");
-    file.writeAsBytesSync(content.buffer.asUint8List());
+    try {
+      var content =
+          await rootBundle.load("assets/${Constants.fileTestVideoEncryptUrl}");
+      final directory = await getApplicationDocumentsDirectory();
+      var file = File("${directory.path}/${Constants.fileTestVideoEncryptUrl}");
+      file.writeAsBytesSync(content.buffer.asUint8List());
+    } catch (e) {
+      print("Failed to load encrypted video asset: $e");
+    }
   }
 
   ///Save logo to file, so we can use it later
   Future _saveLogoToFile() async {
-    var content = await rootBundle.load("assets/${Constants.logo}");
-    final directory = await getApplicationDocumentsDirectory();
-    var file = File("${directory.path}/${Constants.logo}");
-    file.writeAsBytesSync(content.buffer.asUint8List());
+    try {
+      var content = await rootBundle.load("assets/${Constants.logo}");
+      final directory = await getApplicationDocumentsDirectory();
+      var file = File("${directory.path}/${Constants.logo}");
+      file.writeAsBytesSync(content.buffer.asUint8List());
+    } catch (e) {
+      print("Failed to load logo asset: $e");
+    }
   }
 }

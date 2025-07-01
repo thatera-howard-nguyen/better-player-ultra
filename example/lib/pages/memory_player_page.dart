@@ -27,13 +27,21 @@ class _MemoryPlayerPageState extends State<MemoryPlayerPage> {
   }
 
   void _setupDataSource() async {
-    var filePath = await Utils.getFileUrl(Constants.fileTestVideoUrl);
-    File file = File(filePath);
+    try {
+      var filePath = await Utils.getFileUrl(Constants.fileTestVideoUrl);
+      File file = File(filePath);
 
-    List<int> bytes = file.readAsBytesSync().buffer.asUint8List();
-    BetterPlayerDataSource dataSource =
-        BetterPlayerDataSource.memory(bytes, videoExtension: "mp4");
-    _betterPlayerController.setupDataSource(dataSource);
+      if (await file.exists()) {
+        List<int> bytes = file.readAsBytesSync().buffer.asUint8List();
+        BetterPlayerDataSource dataSource =
+            BetterPlayerDataSource.memory(bytes, videoExtension: "mp4");
+        _betterPlayerController.setupDataSource(dataSource);
+      } else {
+        print("Video file not found: $filePath");
+      }
+    } catch (e) {
+      print("Failed to setup memory data source: $e");
+    }
   }
 
   @override

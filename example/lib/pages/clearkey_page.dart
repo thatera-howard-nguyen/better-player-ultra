@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:better_player/better_player.dart';
-import 'package:flutter/material.dart';
-
 import 'package:example/constants.dart';
 import 'package:example/utils.dart';
+import 'package:flutter/material.dart';
 
 class ClearKeyPage extends StatefulWidget {
   @override
@@ -86,8 +86,7 @@ class _ClearKeyState extends State<ClearKeyPage> {
     var _clearKeyDataSourceMemory = BetterPlayerDataSource(
       BetterPlayerDataSourceType.memory,
       "",
-      bytes: File(await Utils.getFileUrl(Constants.fileTestVideoEncryptUrl))
-          .readAsBytesSync(),
+      bytes: await _getFileBytes(Constants.fileTestVideoEncryptUrl),
       drmConfiguration: BetterPlayerDrmConfiguration(
           drmType: BetterPlayerDrmType.clearKey,
           clearKey: BetterPlayerClearKeyUtils.generateKey({
@@ -99,6 +98,22 @@ class _ClearKeyState extends State<ClearKeyPage> {
     );
 
     _clearKeyControllerMemory.setupDataSource(_clearKeyDataSourceMemory);
+  }
+
+  Future<Uint8List> _getFileBytes(String fileName) async {
+    try {
+      String filePath = await Utils.getFileUrl(fileName);
+      File file = File(filePath);
+      if (await file.exists()) {
+        return file.readAsBytesSync();
+      } else {
+        print("File not found: $filePath");
+        return Uint8List(0);
+      }
+    } catch (e) {
+      print("Failed to read file bytes: $e");
+      return Uint8List(0);
+    }
   }
 
   @override

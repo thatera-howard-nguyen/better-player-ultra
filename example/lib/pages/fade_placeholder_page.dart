@@ -50,6 +50,12 @@ class _FadePlaceholderPageState extends State<FadePlaceholderPage> {
             child: Image.network(
               Constants.catImageUrl,
               fit: BoxFit.fill,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: Icon(Icons.error),
+                );
+              },
             ),
           ),
         );

@@ -122,6 +122,12 @@ class BetterPlayerConfiguration {
   /// The default value is false
   final bool mixWithOthers;
 
+  ///Widget to display below the seekbar
+  final Widget? widgetBelowSeekBar;
+
+  ///Widget to display on the left side of the top bar
+  final Widget? widgetInTopBarLeft;
+
   const BetterPlayerConfiguration({
     this.aspectRatio,
     this.autoPlay = false,
@@ -161,6 +167,8 @@ class BetterPlayerConfiguration {
     this.expandToFill = true,
     this.useRootNavigator = false,
     this.mixWithOthers = false,
+    this.widgetBelowSeekBar,
+    this.widgetInTopBarLeft,
   });
 
   BetterPlayerConfiguration copyWith({
@@ -194,6 +202,8 @@ class BetterPlayerConfiguration {
     bool? expandToFill,
     bool? useRootNavigator,
     bool? mixWithOthers,
+    Widget? widgetBelowSeekBar,
+    Widget? widgetInTopBarLeft,
   }) {
     return BetterPlayerConfiguration(
       aspectRatio: aspectRatio ?? this.aspectRatio,
@@ -235,6 +245,8 @@ class BetterPlayerConfiguration {
       expandToFill: expandToFill ?? this.expandToFill,
       useRootNavigator: useRootNavigator ?? this.useRootNavigator,
       mixWithOthers: mixWithOthers ?? this.mixWithOthers,
+      widgetBelowSeekBar: widgetBelowSeekBar ?? this.widgetBelowSeekBar,
+      widgetInTopBarLeft: widgetInTopBarLeft ?? this.widgetInTopBarLeft,
     );
   }
 }

@@ -449,49 +449,18 @@ class BetterPlayerController {
   Future _setupDataSource(BetterPlayerDataSource betterPlayerDataSource) async {
     switch (betterPlayerDataSource.type) {
       case BetterPlayerDataSourceType.network:
-        await videoPlayerController?.setNetworkDataSource(
-          betterPlayerDataSource.url,
-          headers: _getHeaders(),
-          useCache:
-              _betterPlayerDataSource!.cacheConfiguration?.useCache ?? false,
-          maxCacheSize:
-              _betterPlayerDataSource!.cacheConfiguration?.maxCacheSize ?? 0,
-          maxCacheFileSize:
-              _betterPlayerDataSource!.cacheConfiguration?.maxCacheFileSize ??
-                  0,
-          cacheKey: _betterPlayerDataSource?.cacheConfiguration?.key,
-          showNotification: _betterPlayerDataSource
-              ?.notificationConfiguration?.showNotification,
-          title: _betterPlayerDataSource?.notificationConfiguration?.title,
-          author: _betterPlayerDataSource?.notificationConfiguration?.author,
-          imageUrl:
-              _betterPlayerDataSource?.notificationConfiguration?.imageUrl,
-          notificationChannelName: _betterPlayerDataSource
-              ?.notificationConfiguration?.notificationChannelName,
-          overriddenDuration: _betterPlayerDataSource!.overriddenDuration,
-          formatHint: _getVideoFormat(_betterPlayerDataSource!.videoFormat),
-          licenseUrl: _betterPlayerDataSource?.drmConfiguration?.licenseUrl,
-          certificateUrl:
-              _betterPlayerDataSource?.drmConfiguration?.certificateUrl,
-          drmHeaders: _betterPlayerDataSource?.drmConfiguration?.headers,
-          activityName:
-              _betterPlayerDataSource?.notificationConfiguration?.activityName,
-          clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey,
-          videoExtension: _betterPlayerDataSource!.videoExtension,
-        );
-
-        break;
-      case BetterPlayerDataSourceType.file:
-        final file = File(betterPlayerDataSource.url);
-        if (!file.existsSync()) {
-          BetterPlayerUtils.log(
-              "File ${file.path} doesn't exists. This may be because "
-              "you're accessing file from native path and Flutter doesn't "
-              "recognize this path.");
-        }
-
-        await videoPlayerController?.setFileDataSource(
-            File(betterPlayerDataSource.url),
+        try {
+          await videoPlayerController?.setNetworkDataSource(
+            betterPlayerDataSource.url,
+            headers: _getHeaders(),
+            useCache:
+                _betterPlayerDataSource!.cacheConfiguration?.useCache ?? false,
+            maxCacheSize:
+                _betterPlayerDataSource!.cacheConfiguration?.maxCacheSize ?? 0,
+            maxCacheFileSize:
+                _betterPlayerDataSource!.cacheConfiguration?.maxCacheFileSize ??
+                    0,
+            cacheKey: _betterPlayerDataSource?.cacheConfiguration?.key,
             showNotification: _betterPlayerDataSource
                 ?.notificationConfiguration?.showNotification,
             title: _betterPlayerDataSource?.notificationConfiguration?.title,
@@ -501,16 +470,33 @@ class BetterPlayerController {
             notificationChannelName: _betterPlayerDataSource
                 ?.notificationConfiguration?.notificationChannelName,
             overriddenDuration: _betterPlayerDataSource!.overriddenDuration,
+            formatHint: _getVideoFormat(_betterPlayerDataSource!.videoFormat),
+            licenseUrl: _betterPlayerDataSource?.drmConfiguration?.licenseUrl,
+            certificateUrl:
+                _betterPlayerDataSource?.drmConfiguration?.certificateUrl,
+            drmHeaders: _betterPlayerDataSource?.drmConfiguration?.headers,
             activityName: _betterPlayerDataSource
                 ?.notificationConfiguration?.activityName,
-            clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey);
+            clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey,
+            videoExtension: _betterPlayerDataSource!.videoExtension,
+          );
+        } catch (e) {
+          BetterPlayerUtils.log("Failed to setup network data source: $e");
+        }
         break;
-      case BetterPlayerDataSourceType.memory:
-        final file = await _createFile(_betterPlayerDataSource!.bytes!,
-            extension: _betterPlayerDataSource!.videoExtension);
+      case BetterPlayerDataSourceType.file:
+        try {
+          final file = File(betterPlayerDataSource.url);
+          if (!file.existsSync()) {
+            BetterPlayerUtils.log(
+                "File ${file.path} doesn't exists. This may be because "
+                "you're accessing file from native path and Flutter doesn't "
+                "recognize this path.");
+            return;
+          }
 
-        if (file.existsSync()) {
-          await videoPlayerController?.setFileDataSource(file,
+          await videoPlayerController?.setFileDataSource(
+              File(betterPlayerDataSource.url),
               showNotification: _betterPlayerDataSource
                   ?.notificationConfiguration?.showNotification,
               title: _betterPlayerDataSource?.notificationConfiguration?.title,
@@ -524,9 +510,37 @@ class BetterPlayerController {
               activityName: _betterPlayerDataSource
                   ?.notificationConfiguration?.activityName,
               clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey);
-          _tempFiles.add(file);
-        } else {
-          throw ArgumentError("Couldn't create file from memory.");
+        } catch (e) {
+          BetterPlayerUtils.log("Failed to setup file data source: $e");
+        }
+        break;
+      case BetterPlayerDataSourceType.memory:
+        try {
+          final file = await _createFile(_betterPlayerDataSource!.bytes!,
+              extension: _betterPlayerDataSource!.videoExtension);
+
+          if (file.existsSync()) {
+            await videoPlayerController?.setFileDataSource(file,
+                showNotification: _betterPlayerDataSource
+                    ?.notificationConfiguration?.showNotification,
+                title:
+                    _betterPlayerDataSource?.notificationConfiguration?.title,
+                author:
+                    _betterPlayerDataSource?.notificationConfiguration?.author,
+                imageUrl: _betterPlayerDataSource
+                    ?.notificationConfiguration?.imageUrl,
+                notificationChannelName: _betterPlayerDataSource
+                    ?.notificationConfiguration?.notificationChannelName,
+                overriddenDuration: _betterPlayerDataSource!.overriddenDuration,
+                activityName: _betterPlayerDataSource
+                    ?.notificationConfiguration?.activityName,
+                clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey);
+            _tempFiles.add(file);
+          } else {
+            BetterPlayerUtils.log("Couldn't create file from memory.");
+          }
+        } catch (e) {
+          BetterPlayerUtils.log("Failed to setup memory data source: $e");
         }
         break;
     }
@@ -537,11 +551,16 @@ class BetterPlayerController {
   ///directory.
   Future<File> _createFile(List<int> bytes,
       {String? extension = "temp"}) async {
-    final String dir = (await getTemporaryDirectory()).path;
-    final File temp = File(
-        '$dir/better_player_${DateTime.now().millisecondsSinceEpoch}.$extension');
-    await temp.writeAsBytes(bytes);
-    return temp;
+    try {
+      final String dir = (await getTemporaryDirectory()).path;
+      final File temp = File(
+          '$dir/better_player_${DateTime.now().millisecondsSinceEpoch}.$extension');
+      await temp.writeAsBytes(bytes);
+      return temp;
+    } catch (e) {
+      BetterPlayerUtils.log("Failed to create temporary file: $e");
+      rethrow;
+    }
   }
 
   ///Initializes video based on configuration. Invoke actions which need to be

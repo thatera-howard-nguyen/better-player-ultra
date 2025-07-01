@@ -24,13 +24,17 @@ class BetterPlayerSubtitlesFactory {
     try {
       final List<BetterPlayerSubtitle> subtitles = [];
       for (final String? url in source.urls!) {
-        final file = File(url!);
-        if (file.existsSync()) {
-          final String fileContent = await file.readAsString();
-          final subtitlesCache = _parseString(fileContent);
-          subtitles.addAll(subtitlesCache);
-        } else {
-          BetterPlayerUtils.log("$url doesn't exist!");
+        try {
+          final file = File(url!);
+          if (file.existsSync()) {
+            final String fileContent = await file.readAsString();
+            final subtitlesCache = _parseString(fileContent);
+            subtitles.addAll(subtitlesCache);
+          } else {
+            BetterPlayerUtils.log("$url doesn't exist!");
+          }
+        } catch (e) {
+          BetterPlayerUtils.log("Failed to read subtitle file $url: $e");
         }
       }
       return subtitles;
