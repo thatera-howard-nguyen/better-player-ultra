@@ -18,10 +18,10 @@ class _WidgetBelowSeekbarPageState extends State<WidgetBelowSeekbarPage> {
       fit: BoxFit.contain,
       // Widget dưới seekbar - API mới đơn giản hơn
       widgetBelowSeekBar: _buildCustomWidgetBelowSeekbar(),
+      widgetInTopBarLeft: _buildCustomWidgetInTopBarLeft(),
       controlsConfiguration: BetterPlayerControlsConfiguration(
         enablePip: true,
         // Widget ở bên trái top bar
-        widgetInTopBarLeft: _buildCustomWidgetInTopBarLeft(),
         playerTheme: BetterPlayerTheme.material,
       ),
     );

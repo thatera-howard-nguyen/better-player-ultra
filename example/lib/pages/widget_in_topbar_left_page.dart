@@ -29,9 +29,9 @@ class _WidgetInTopbarLeftPageState extends State<WidgetInTopbarLeftPage> {
         BetterPlayerConfiguration(
       aspectRatio: 16 / 9,
       fit: BoxFit.contain,
+      widgetInTopBarLeft: _getCurrentExampleWidget(),
       controlsConfiguration: BetterPlayerControlsConfiguration(
         enablePip: true,
-        widgetInTopBarLeft: _getCurrentExampleWidget(),
         playerTheme: BetterPlayerTheme.material,
       ),
     );

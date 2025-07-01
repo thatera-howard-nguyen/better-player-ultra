@@ -71,32 +71,35 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
           children: [
             if (betterPlayerControlsConfiguration.enablePlaybackSpeed)
               _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.playbackSpeedIcon,
+                  betterPlayerControlsConfiguration.playbackSpeedIcon ??
+                      const SizedBox(),
                   translations.overflowMenuPlaybackSpeed, () {
                 Navigator.of(context).pop();
                 _showSpeedChooserWidget();
               }),
             if (betterPlayerControlsConfiguration.enableSubtitles)
               _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.subtitlesIcon,
+                  betterPlayerControlsConfiguration.subtitlesIcon ??
+                      const SizedBox(),
                   translations.overflowMenuSubtitles, () {
                 Navigator.of(context).pop();
                 _showSubtitlesSelectionWidget();
               }),
             if (betterPlayerControlsConfiguration.enableQualities)
               _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.qualitiesIcon,
+                  betterPlayerControlsConfiguration.qualitiesIcon ??
+                      const SizedBox(),
                   translations.overflowMenuQuality, () {
                 Navigator.of(context).pop();
                 _showQualitiesSelectionWidget();
               }),
-            if (betterPlayerControlsConfiguration.enableAudioTracks)
-              _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.audioTracksIcon,
-                  translations.overflowMenuAudioTracks, () {
-                Navigator.of(context).pop();
-                _showAudioTracksSelectionWidget();
-              }),
+            _buildMoreOptionsListRow(
+                betterPlayerControlsConfiguration.audioTracksIcon ??
+                    const SizedBox(),
+                translations.overflowMenuAudioTracks, () {
+              Navigator.of(context).pop();
+              _showAudioTracksSelectionWidget();
+            }),
             if (betterPlayerControlsConfiguration
                 .overflowMenuCustomItems.isNotEmpty)
               ...betterPlayerControlsConfiguration.overflowMenuCustomItems.map(
@@ -116,7 +119,7 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
   }
 
   Widget _buildMoreOptionsListRow(
-      IconData icon, String name, void Function() onTap) {
+      Widget icon, String name, void Function() onTap) {
     return BetterPlayerMaterialClickableWidget(
       onTap: onTap,
       child: Padding(
@@ -124,10 +127,7 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
         child: Row(
           children: [
             const SizedBox(width: 8),
-            Icon(
-              icon,
-              color: betterPlayerControlsConfiguration.overflowMenuIconsColor,
-            ),
+            icon,
             const SizedBox(width: 16),
             Text(
               name,

@@ -15,29 +15,32 @@ class BetterPlayerControlsConfiguration {
   ///Color of icons
   final Color iconsColor;
 
-  ///Icon of play
-  final IconData playIcon;
+  ///Widget of play
+  final Widget? playIcon;
 
-  ///Icon of pause
-  final IconData pauseIcon;
+  ///Widget of pause
+  final Widget? pauseIcon;
 
-  ///Icon of mute
-  final IconData muteIcon;
+  ///Widget of mute
+  final Widget? muteIcon;
 
-  ///Icon of unmute
-  final IconData unMuteIcon;
+  ///Widget of unmute
+  final Widget? unMuteIcon;
 
-  ///Icon of fullscreen mode enable
-  final IconData fullscreenEnableIcon;
+  ///Widget of fullscreen mode enable
+  final Widget? fullscreenEnableIcon;
 
-  ///Icon of fullscreen mode disable
-  final IconData fullscreenDisableIcon;
+  ///Widget of fullscreen mode disable
+  final Widget? fullscreenDisableIcon;
 
-  ///Cupertino only icon, icon of skip
-  final IconData skipBackIcon;
+  ///Widget of skip back
+  final Widget? skipBackIcon;
 
-  ///Cupertino only icon, icon of forward
-  final IconData skipForwardIcon;
+  ///Widget of skip forward
+  final Widget? skipForwardIcon;
+
+  ///Widget of replay
+  final Widget? replayIcon;
 
   ///Flag used to enable/disable fullscreen
   final bool enableFullscreen;
@@ -119,23 +122,23 @@ class BetterPlayerControlsConfiguration {
   ///Custom items of overflow menu
   final List<BetterPlayerOverflowMenuItem> overflowMenuCustomItems;
 
-  ///Icon of the overflow menu
-  final IconData overflowMenuIcon;
+  ///Widget of the overflow menu
+  final Widget? overflowMenuIcon;
 
-  ///Icon of the PiP menu
-  final IconData pipMenuIcon;
+  ///Widget of the PiP menu
+  final Widget? pipMenuIcon;
 
-  ///Icon of the playback speed menu item from overflow menu
-  final IconData playbackSpeedIcon;
+  ///Widget of the playback speed menu item from overflow menu
+  final Widget? playbackSpeedIcon;
 
-  ///Icon of the subtitles menu item from overflow menu
-  final IconData subtitlesIcon;
+  ///Widget of the subtitles menu item from overflow menu
+  final Widget? subtitlesIcon;
 
-  ///Icon of the qualities menu item from overflow menu
-  final IconData qualitiesIcon;
+  ///Widget of the qualities menu item from overflow menu
+  final Widget? qualitiesIcon;
 
-  ///Icon of the audios menu item from overflow menu
-  final IconData audioTracksIcon;
+  ///Widget of the audios menu item from overflow menu
+  final Widget? audioTracksIcon;
 
   ///Color of overflow menu icons
   final Color overflowMenuIconsColor;
@@ -161,24 +164,26 @@ class BetterPlayerControlsConfiguration {
   ///Color of text in bottom modal sheet used for overflow menu items.
   final Color overflowModalTextColor;
 
-  ///Widget to display below the seekbar
-  final Widget? widgetBelowSeekBar;
-
-  ///Widget to display on the left side of the top bar
-  final Widget? widgetInTopBarLeft;
-
   const BetterPlayerControlsConfiguration({
     this.controlBarColor = Colors.black87,
     this.textColor = Colors.white,
     this.iconsColor = Colors.white,
-    this.playIcon = Icons.play_arrow_outlined,
-    this.pauseIcon = Icons.pause_outlined,
-    this.muteIcon = Icons.volume_up_outlined,
-    this.unMuteIcon = Icons.volume_off_outlined,
-    this.fullscreenEnableIcon = Icons.fullscreen_outlined,
-    this.fullscreenDisableIcon = Icons.fullscreen_exit_outlined,
-    this.skipBackIcon = Icons.replay_10_outlined,
-    this.skipForwardIcon = Icons.forward_10_outlined,
+    this.playIcon =
+        const Icon(Icons.play_arrow_outlined, size: 42, color: Colors.white),
+    this.pauseIcon =
+        const Icon(Icons.pause_outlined, size: 42, color: Colors.white),
+    this.muteIcon = const Icon(Icons.volume_up_outlined, color: Colors.white),
+    this.unMuteIcon =
+        const Icon(Icons.volume_off_outlined, color: Colors.white),
+    this.fullscreenEnableIcon =
+        const Icon(Icons.fullscreen_outlined, color: Colors.white),
+    this.fullscreenDisableIcon =
+        const Icon(Icons.fullscreen_exit_outlined, color: Colors.white),
+    this.skipBackIcon =
+        const Icon(Icons.replay_10_outlined, size: 24, color: Colors.white),
+    this.skipForwardIcon =
+        const Icon(Icons.forward_10_outlined, size: 24, color: Colors.white),
+    this.replayIcon = const Icon(Icons.replay, size: 42, color: Colors.white),
     this.enableFullscreen = true,
     this.enableMute = true,
     this.enableProgressText = true,
@@ -205,12 +210,14 @@ class BetterPlayerControlsConfiguration {
     this.enablePip = true,
     this.enableRetry = true,
     this.overflowMenuCustomItems = const [],
-    this.overflowMenuIcon = Icons.more_vert_outlined,
-    this.pipMenuIcon = Icons.picture_in_picture_outlined,
-    this.playbackSpeedIcon = Icons.shutter_speed_outlined,
-    this.qualitiesIcon = Icons.hd_outlined,
-    this.subtitlesIcon = Icons.closed_caption_outlined,
-    this.audioTracksIcon = Icons.audiotrack_outlined,
+    this.overflowMenuIcon =
+        const Icon(Icons.more_vert_outlined, color: Colors.white),
+    this.pipMenuIcon =
+        const Icon(Icons.picture_in_picture_outlined, color: Colors.white),
+    this.playbackSpeedIcon = const Icon(Icons.shutter_speed_outlined),
+    this.qualitiesIcon = const Icon(Icons.hd_outlined),
+    this.subtitlesIcon = const Icon(Icons.closed_caption_outlined),
+    this.audioTracksIcon = const Icon(Icons.audiotrack_outlined),
     this.overflowMenuIconsColor = Colors.black,
     this.forwardSkipTimeInMilliseconds = 10000,
     this.backwardSkipTimeInMilliseconds = 10000,
@@ -219,8 +226,6 @@ class BetterPlayerControlsConfiguration {
     this.backgroundColor = Colors.black,
     this.overflowModalColor = Colors.white,
     this.overflowModalTextColor = Colors.black,
-    this.widgetBelowSeekBar,
-    this.widgetInTopBarLeft,
   });
 
   factory BetterPlayerControlsConfiguration.white() {
@@ -236,20 +241,21 @@ class BetterPlayerControlsConfiguration {
 
   factory BetterPlayerControlsConfiguration.cupertino() {
     return const BetterPlayerControlsConfiguration(
-      fullscreenEnableIcon: CupertinoIcons.arrow_up_left_arrow_down_right,
-      fullscreenDisableIcon: CupertinoIcons.arrow_down_right_arrow_up_left,
-      playIcon: CupertinoIcons.play_arrow_solid,
-      pauseIcon: CupertinoIcons.pause_solid,
-      skipBackIcon: CupertinoIcons.gobackward_15,
-      skipForwardIcon: CupertinoIcons.goforward_15,
+      fullscreenEnableIcon: Icon(CupertinoIcons.arrow_up_left_arrow_down_right),
+      fullscreenDisableIcon:
+          Icon(CupertinoIcons.arrow_down_right_arrow_up_left),
+      playIcon: Icon(CupertinoIcons.play_arrow_solid),
+      pauseIcon: Icon(CupertinoIcons.pause_solid),
+      skipBackIcon: Icon(CupertinoIcons.gobackward_15, size: 24),
+      skipForwardIcon: Icon(CupertinoIcons.goforward_15, size: 24),
     );
   }
 
   ///Setup BetterPlayerControlsConfiguration based on Theme options.
   factory BetterPlayerControlsConfiguration.theme(ThemeData theme) {
     return BetterPlayerControlsConfiguration(
-      textColor: theme.textTheme.bodySmall?.color ?? Colors.white,
-      iconsColor: theme.buttonTheme.colorScheme?.primary ?? Colors.white,
+      textColor: theme.textTheme.bodyMedium?.color ?? Colors.white,
+      iconsColor: theme.textTheme.bodyMedium?.color ?? Colors.white,
     );
   }
 }
