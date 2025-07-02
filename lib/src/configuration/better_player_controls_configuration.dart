@@ -122,23 +122,23 @@ class BetterPlayerControlsConfiguration {
   ///Custom items of overflow menu
   final List<BetterPlayerOverflowMenuItem> overflowMenuCustomItems;
 
-  ///Widget of the overflow menu
-  final Widget? overflowMenuIcon;
+  ///Icon of the overflow menu
+  final IconData overflowMenuIcon;
 
-  ///Widget of the PiP menu
-  final Widget? pipMenuIcon;
+  ///Icon of the PiP menu
+  final IconData pipMenuIcon;
 
-  ///Widget of the playback speed menu item from overflow menu
-  final Widget? playbackSpeedIcon;
+  ///Icon of the playback speed menu item from overflow menu
+  final IconData playbackSpeedIcon;
 
-  ///Widget of the subtitles menu item from overflow menu
-  final Widget? subtitlesIcon;
+  ///Icon of the subtitles menu item from overflow menu
+  final IconData subtitlesIcon;
 
-  ///Widget of the qualities menu item from overflow menu
-  final Widget? qualitiesIcon;
+  ///Icon of the qualities menu item from overflow menu
+  final IconData qualitiesIcon;
 
-  ///Widget of the audios menu item from overflow menu
-  final Widget? audioTracksIcon;
+  ///Icon of the audios menu item from overflow menu
+  final IconData audioTracksIcon;
 
   ///Color of overflow menu icons
   final Color overflowMenuIconsColor;
@@ -210,14 +210,12 @@ class BetterPlayerControlsConfiguration {
     this.enablePip = true,
     this.enableRetry = true,
     this.overflowMenuCustomItems = const [],
-    this.overflowMenuIcon =
-        const Icon(Icons.more_vert_outlined, color: Colors.white),
-    this.pipMenuIcon =
-        const Icon(Icons.picture_in_picture_outlined, color: Colors.white),
-    this.playbackSpeedIcon = const Icon(Icons.shutter_speed_outlined),
-    this.qualitiesIcon = const Icon(Icons.hd_outlined),
-    this.subtitlesIcon = const Icon(Icons.closed_caption_outlined),
-    this.audioTracksIcon = const Icon(Icons.audiotrack_outlined),
+    this.overflowMenuIcon = Icons.more_vert_outlined,
+    this.pipMenuIcon = Icons.picture_in_picture_outlined,
+    this.playbackSpeedIcon = Icons.shutter_speed_outlined,
+    this.qualitiesIcon = Icons.hd_outlined,
+    this.subtitlesIcon = Icons.closed_caption_outlined,
+    this.audioTracksIcon = Icons.audiotrack_outlined,
     this.overflowMenuIconsColor = Colors.black,
     this.forwardSkipTimeInMilliseconds = 10000,
     this.backwardSkipTimeInMilliseconds = 10000,
@@ -237,22 +235,6 @@ class BetterPlayerControlsConfiguration {
       progressBarHandleColor: Colors.black,
       progressBarBufferedColor: Colors.black54,
       progressBarBackgroundColor: Colors.white70,
-      playbackSpeedIcon: const Icon(
-        Icons.shutter_speed_outlined,
-        color: Colors.black,
-      ),
-      qualitiesIcon: const Icon(
-        Icons.hd_outlined,
-        color: Colors.black,
-      ),
-      subtitlesIcon: const Icon(
-        Icons.closed_caption_outlined,
-        color: Colors.black,
-      ),
-      audioTracksIcon: const Icon(
-        Icons.audiotrack_outlined,
-        color: Colors.black,
-      ),
     );
   }
 
@@ -271,8 +253,8 @@ class BetterPlayerControlsConfiguration {
   ///Setup BetterPlayerControlsConfiguration based on Theme options.
   factory BetterPlayerControlsConfiguration.theme(ThemeData theme) {
     return BetterPlayerControlsConfiguration(
-      textColor: theme.textTheme.bodyMedium?.color ?? Colors.white,
-      iconsColor: theme.textTheme.bodyMedium?.color ?? Colors.white,
+      textColor: theme.textTheme.bodySmall?.color ?? Colors.white,
+      iconsColor: theme.buttonTheme.colorScheme?.primary ?? Colors.white,
     );
   }
 }

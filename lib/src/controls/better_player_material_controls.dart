@@ -107,6 +107,15 @@ class _BetterPlayerMaterialControlsState
               }
             }
           : null,
+      onVerticalDragUpdate: betterPlayerController!.controlsEnabled
+          ? (details) {
+              if (BetterPlayerMultipleGestureDetector.of(context) != null) {
+                BetterPlayerMultipleGestureDetector.of(context)!
+                    .onVerticalDragUpdate
+                    ?.call(details);
+              }
+            }
+          : null,
       child: AbsorbPointer(
         absorbing:
             controlsNotVisible && betterPlayerController!.controlsEnabled,
@@ -265,8 +274,10 @@ class _BetterPlayerMaterialControlsState
       },
       child: Padding(
         padding: const EdgeInsets.all(8),
-        child:
-            betterPlayerControlsConfiguration.pipMenuIcon ?? const SizedBox(),
+        child: Icon(
+          betterPlayerControlsConfiguration.pipMenuIcon,
+          color: betterPlayerControlsConfiguration.iconsColor,
+        ),
       ),
     );
   }
@@ -307,7 +318,10 @@ class _BetterPlayerMaterialControlsState
       },
       child: Padding(
         padding: const EdgeInsets.all(8),
-        child: _controlsConfiguration.overflowMenuIcon ?? const SizedBox(),
+        child: Icon(
+          _controlsConfiguration.overflowMenuIcon,
+          color: _controlsConfiguration.iconsColor,
+        ),
       ),
     );
   }
