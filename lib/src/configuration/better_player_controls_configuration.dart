@@ -230,13 +230,30 @@ class BetterPlayerControlsConfiguration {
 
   factory BetterPlayerControlsConfiguration.white() {
     return const BetterPlayerControlsConfiguration(
-        controlBarColor: Colors.white,
-        textColor: Colors.black,
-        iconsColor: Colors.black,
-        progressBarPlayedColor: Colors.black,
-        progressBarHandleColor: Colors.black,
-        progressBarBufferedColor: Colors.black54,
-        progressBarBackgroundColor: Colors.white70);
+      controlBarColor: Colors.white,
+      textColor: Colors.black,
+      iconsColor: Colors.black,
+      progressBarPlayedColor: Colors.black,
+      progressBarHandleColor: Colors.black,
+      progressBarBufferedColor: Colors.black54,
+      progressBarBackgroundColor: Colors.white70,
+      playbackSpeedIcon: const Icon(
+        Icons.shutter_speed_outlined,
+        color: Colors.black,
+      ),
+      qualitiesIcon: const Icon(
+        Icons.hd_outlined,
+        color: Colors.black,
+      ),
+      subtitlesIcon: const Icon(
+        Icons.closed_caption_outlined,
+        color: Colors.black,
+      ),
+      audioTracksIcon: const Icon(
+        Icons.audiotrack_outlined,
+        color: Colors.black,
+      ),
+    );
   }
 
   factory BetterPlayerControlsConfiguration.cupertino() {
