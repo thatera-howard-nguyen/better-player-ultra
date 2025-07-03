@@ -107,15 +107,6 @@ class _BetterPlayerMaterialControlsState
               }
             }
           : null,
-      onVerticalDragUpdate: betterPlayerController!.controlsEnabled
-          ? (details) {
-              if (BetterPlayerMultipleGestureDetector.of(context) != null) {
-                BetterPlayerMultipleGestureDetector.of(context)!
-                    .onVerticalDragUpdate
-                    ?.call(details);
-              }
-            }
-          : null,
       child: AbsorbPointer(
         absorbing:
             controlsNotVisible && betterPlayerController!.controlsEnabled,
