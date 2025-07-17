@@ -13,21 +13,28 @@ class BetterPlayerTranslations {
   final String overflowMenuQuality;
   final String overflowMenuAudioTracks;
   final String qualityAuto;
+  final String qualityLow;
+  final String qualityMedium;
+  final String qualityHigh;
 
-  BetterPlayerTranslations(
-      {this.languageCode = "en",
-      this.generalDefaultError = "Video can't be played",
-      this.generalNone = "None",
-      this.generalDefault = "Default",
-      this.generalRetry = "Retry",
-      this.playlistLoadingNextVideo = "Loading next video",
-      this.controlsLive = "LIVE",
-      this.controlsNextVideoIn = "Next video in",
-      this.overflowMenuPlaybackSpeed = "Playback speed",
-      this.overflowMenuSubtitles = "Subtitles",
-      this.overflowMenuQuality = "Quality",
-      this.overflowMenuAudioTracks = "Audio",
-      this.qualityAuto = "Auto"});
+  BetterPlayerTranslations({
+    this.languageCode = "en",
+    this.generalDefaultError = "Video can't be played",
+    this.generalNone = "None",
+    this.generalDefault = "Default",
+    this.generalRetry = "Retry",
+    this.playlistLoadingNextVideo = "Loading next video",
+    this.controlsLive = "LIVE",
+    this.controlsNextVideoIn = "Next video in",
+    this.overflowMenuPlaybackSpeed = "Playback speed",
+    this.overflowMenuSubtitles = "Subtitles",
+    this.overflowMenuQuality = "Quality",
+    this.overflowMenuAudioTracks = "Audio",
+    this.qualityAuto = "Auto",
+    this.qualityLow = "Low",
+    this.qualityMedium = "Medium",
+    this.qualityHigh = "High",
+  });
 
   factory BetterPlayerTranslations.polish() => BetterPlayerTranslations(
         languageCode: "pl",
@@ -42,6 +49,9 @@ class BetterPlayerTranslations {
         overflowMenuQuality: "Jakość",
         overflowMenuAudioTracks: "Dźwięk",
         qualityAuto: "Automatycznie",
+        qualityLow: "Niska",
+        qualityMedium: "Średnia",
+        qualityHigh: "Wysoka",
       );
 
   factory BetterPlayerTranslations.chinese() => BetterPlayerTranslations(
@@ -58,6 +68,9 @@ class BetterPlayerTranslations {
         overflowMenuQuality: "质量",
         overflowMenuAudioTracks: "音訊",
         qualityAuto: "汽車",
+        qualityLow: "低",
+        qualityMedium: "中等",
+        qualityHigh: "高",
       );
 
   factory BetterPlayerTranslations.hindi() => BetterPlayerTranslations(
@@ -74,6 +87,9 @@ class BetterPlayerTranslations {
         overflowMenuQuality: "गुणवत्ता",
         overflowMenuAudioTracks: "ऑडियो",
         qualityAuto: "ऑटो",
+        qualityLow: "कम",
+        qualityMedium: "मध्यम",
+        qualityHigh: "उच्च",
       );
 
   factory BetterPlayerTranslations.arabic() => BetterPlayerTranslations(
@@ -89,7 +105,10 @@ class BetterPlayerTranslations {
         overflowMenuSubtitles: "الترجمة",
         overflowMenuQuality: "الجودة",
         overflowMenuAudioTracks: "الصوت",
-        qualityAuto: "ऑटो",
+        qualityAuto: "تلقائي",
+        qualityLow: "منخفض",
+        qualityMedium: "متوسط",
+        qualityHigh: "عالي",
       );
 
   factory BetterPlayerTranslations.turkish() => BetterPlayerTranslations(
@@ -105,7 +124,10 @@ class BetterPlayerTranslations {
       overflowMenuSubtitles: "Altyazı",
       overflowMenuQuality: "Kalite",
       overflowMenuAudioTracks: "Ses",
-      qualityAuto: "Otomatik");
+      qualityAuto: "Otomatik",
+      qualityLow: "Düşük",
+      qualityMedium: "Orta",
+      qualityHigh: "Yüksek");
 
   factory BetterPlayerTranslations.vietnamese() => BetterPlayerTranslations(
         languageCode: "vi",
@@ -121,6 +143,9 @@ class BetterPlayerTranslations {
         overflowMenuQuality: "Chất lượng",
         overflowMenuAudioTracks: "Âm thanh",
         qualityAuto: "Tự động",
+        qualityLow: "Tiết kiệm dữ liệu",
+        qualityMedium: "Tiêu chuẩn",
+        qualityHigh: "Nâng cao",
       );
 
   factory BetterPlayerTranslations.spanish() => BetterPlayerTranslations(
@@ -136,5 +161,27 @@ class BetterPlayerTranslations {
         overflowMenuSubtitles: "Subtítulos",
         overflowMenuQuality: "Calidad",
         qualityAuto: "Automática",
+        qualityLow: "Baja",
+        qualityMedium: "Media",
+        qualityHigh: "Alta",
+      );
+
+  factory BetterPlayerTranslations.japanese() => BetterPlayerTranslations(
+        languageCode: "ja",
+        generalDefaultError: "ビデオを再生できません",
+        generalNone: "なし",
+        generalDefault: "デフォルト",
+        generalRetry: "再試行",
+        controlsLive: "ライブ",
+        playlistLoadingNextVideo: "次のビデオを読み込んでいます",
+        controlsNextVideoIn: "次のビデオ",
+        overflowMenuPlaybackSpeed: "再生速度",
+        overflowMenuSubtitles: "字幕",
+        overflowMenuQuality: "画質",
+        overflowMenuAudioTracks: "音声",
+        qualityAuto: "自動",
+        qualityLow: "データセーバー",
+        qualityMedium: "標準",
+        qualityHigh: "高画質",
       );
 }

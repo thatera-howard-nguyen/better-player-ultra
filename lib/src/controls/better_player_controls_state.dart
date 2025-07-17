@@ -7,6 +7,30 @@ import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+enum QualityTier { auto, low, medium, high }
+
+extension QualityTierExtension on QualityTier {
+  String labelWithTranslations(BetterPlayerTranslations translations) {
+    switch (this) {
+      case QualityTier.auto:
+        return translations.qualityAuto;
+      case QualityTier.low:
+        return translations.qualityLow;
+      case QualityTier.medium:
+        return translations.qualityMedium;
+      case QualityTier.high:
+        return translations.qualityHigh;
+    }
+  }
+
+  static QualityTier fromBitrate(int bitrate) {
+    if (bitrate == 0) return QualityTier.auto;
+    if (bitrate < 700000) return QualityTier.low;
+    if (bitrate < 3000000) return QualityTier.medium;
+    return QualityTier.high;
+  }
+}
+
 ///Base class for both material and cupertino controls
 abstract class BetterPlayerControlsState<T extends StatefulWidget>
     extends State<T> {
@@ -268,26 +292,32 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
   ///Track selection is used for HLS / DASH videos
   ///Resolution selection is used for normal videos
   void _showQualitiesSelectionWidget() {
-    // HLS / DASH
-    final List<String> asmsTrackNames =
-        betterPlayerController!.betterPlayerDataSource!.asmsTrackNames ?? [];
-    final List<BetterPlayerAsmsTrack> asmsTracks =
+    final List<BetterPlayerAsmsTrack> allTracks =
         betterPlayerController!.betterPlayerAsmsTracks;
-    final List<Widget> children = [];
-    for (var index = 0; index < asmsTracks.length; index++) {
-      final track = asmsTracks[index];
 
-      String? preferredName;
-      if (track.height == 0 && track.width == 0 && track.bitrate == 0) {
-        preferredName = betterPlayerController!.translations.qualityAuto;
-      } else {
-        preferredName =
-            asmsTrackNames.length > index ? asmsTrackNames[index] : null;
+    final Map<QualityTier, BetterPlayerAsmsTrack> bestTrackPerTier = {};
+
+    for (final track in allTracks) {
+      final int bitrate = track.bitrate ?? 0;
+      final int width = track.width ?? 0;
+      final int height = track.height ?? 0;
+
+      final tier = (bitrate == 0 && width == 0 && height == 0)
+          ? QualityTier.auto
+          : QualityTierExtension.fromBitrate(bitrate);
+
+      final currentBest = bestTrackPerTier[tier];
+      if (currentBest == null ||
+          (track.bitrate ?? 0) > (currentBest.bitrate ?? 0)) {
+        bestTrackPerTier[tier] = track;
       }
-      children.add(_buildTrackRow(asmsTracks[index], preferredName));
     }
 
-    // normal videos
+    final List<Widget> children = bestTrackPerTier.entries.map((entry) {
+      return _buildTrackRow(entry.value, entry.key);
+    }).toList();
+
+    // Xử lý resolution-based videos nếu có
     final resolutions =
         betterPlayerController!.betterPlayerDataSource!.resolutions;
     resolutions?.forEach((key, value) {
@@ -296,21 +326,22 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
 
     if (children.isEmpty) {
       children.add(
-        _buildTrackRow(BetterPlayerAsmsTrack.defaultTrack(),
-            betterPlayerController!.translations.qualityAuto),
+        _buildTrackRow(BetterPlayerAsmsTrack.defaultTrack(), QualityTier.auto),
       );
     }
 
     _showModalBottomSheet(children);
   }
 
-  Widget _buildTrackRow(BetterPlayerAsmsTrack track, String? preferredName) {
-    final int width = track.width ?? 0;
-    final int height = track.height ?? 0;
+  Widget _buildTrackRow(BetterPlayerAsmsTrack track,
+      [QualityTier? preferredTier]) {
     final int bitrate = track.bitrate ?? 0;
     final String mimeType = (track.mimeType ?? '').replaceAll('video/', '');
-    final String trackName = preferredName ??
-        "${width}x$height ${BetterPlayerUtils.formatBitrate(bitrate)} $mimeType";
+
+    final translations = betterPlayerController!.translations;
+    final String label = preferredTier != null
+        ? preferredTier.labelWithTranslations(translations)
+        : "${BetterPlayerUtils.formatBitrate(bitrate)} $mimeType";
 
     final BetterPlayerAsmsTrack? selectedTrack =
         betterPlayerController!.betterPlayerAsmsTrack;
@@ -327,15 +358,15 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
           children: [
             SizedBox(width: isSelected ? 8 : 16),
             Visibility(
-                visible: isSelected,
-                child: Icon(
-                  Icons.check_outlined,
-                  color:
-                      betterPlayerControlsConfiguration.overflowModalTextColor,
-                )),
+              visible: isSelected,
+              child: Icon(
+                Icons.check_outlined,
+                color: betterPlayerControlsConfiguration.overflowModalTextColor,
+              ),
+            ),
             const SizedBox(width: 16),
             Text(
-              trackName,
+              label,
               style: _getOverflowMenuElementTextStyle(isSelected),
             ),
           ],
