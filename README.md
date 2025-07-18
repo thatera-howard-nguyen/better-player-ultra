@@ -1,5 +1,9 @@
 # Better Player Ultra
 
+## Important information
+
+This plugin development is in progress. You may encounter breaking changes each version. This plugin is developed part-time for free. If you need some feature which is supported by other players available in pub dev, then feel free to create PR. All valuable contributions are welcome!
+
 ## Introduction
 
 This plugin is based on [Chewie](https://github.com/brianegan/chewie). Chewie is awesome plugin and works well in many cases. Better Player is a continuation of ideas introduced in Chewie. Better player fix common bugs, adds more configuration options and solves typical use cases.
@@ -28,7 +32,3 @@ This plugin is based on [Chewie](https://github.com/brianegan/chewie). Chewie is
 - [Official documentation](https://jhomlala.github.io/betterplayer/)
 - [Example application](https://github.com/jhomlala/betterplayer/tree/master/example)
 - [API reference](https://pub.dev/documentation/better_player/latest/better_player/better_player-library.html)
-
-## Important information
-
-This plugin development is in progress. You may encounter breaking changes each version. This plugin is developed part-time for free. If you need some feature which is supported by other players available in pub dev, then feel free to create PR. All valuable contributions are welcome!
