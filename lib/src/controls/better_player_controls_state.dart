@@ -23,11 +23,12 @@ extension QualityTierExtension on QualityTier {
     }
   }
 
+  // source: https://support.google.com/youtube/answer/1722171?hl=en#zippy=%2Cbitrate
   static QualityTier fromBitrate(int bitrate) {
     if (bitrate == 0) return QualityTier.auto;
-    if (bitrate < 700000) return QualityTier.low;
-    if (bitrate < 3000000) return QualityTier.medium;
-    return QualityTier.high;
+    if (bitrate < 1000000) return QualityTier.low; // < 1 Mbps
+    if (bitrate < 4000000) return QualityTier.medium; // 1 – <4 Mbps
+    return QualityTier.high; // ≥ 4 Mbps
   }
 }
 
