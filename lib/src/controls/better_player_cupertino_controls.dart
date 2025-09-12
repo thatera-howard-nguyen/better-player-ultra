@@ -9,6 +9,9 @@ import 'package:better_player/src/core/better_player_utils.dart';
 import 'package:better_player/src/video_player/video_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+enum _CupertinoDoubleTapSide { left, right }
 
 class BetterPlayerCupertinoControls extends StatefulWidget {
   ///Callback used to send information if player bar is hidden or not
@@ -42,6 +45,15 @@ class _BetterPlayerCupertinoControlsState
   VideoPlayerController? _controller;
   BetterPlayerController? _betterPlayerController;
   StreamSubscription? _controlsVisibilityStreamSubscription;
+
+  // Double-tap seek overlay state (same as Material)
+  static const int _doubleTapStepMs = 10000; // 10s per tap
+  static const int _doubleTapGraceWindowMs = 400; // suggested 400ms
+  Timer? _doubleTapTimer;
+  int _doubleTapAccumMs = 0;
+  bool _showDoubleTapOverlay = false;
+  bool _doubleTapConsumed = false;
+  _CupertinoDoubleTapSide? _doubleTapSide;
 
   BetterPlayerControlsConfiguration get _controlsConfiguration =>
       widget.controlsConfiguration;
@@ -119,12 +131,26 @@ class _BetterPlayerCupertinoControlsState
                   : changePlayerControlsNotVisible(true);
             }
           : null,
+      onDoubleTapDown: betterPlayerController!.controlsEnabled
+          ? (details) {
+              if (BetterPlayerMultipleGestureDetector.of(context) != null) {
+                BetterPlayerMultipleGestureDetector.of(context)!
+                    .onDoubleTapDown
+                    ?.call(details);
+              }
+              _handleDoubleTapDown(details);
+            }
+          : null,
       onDoubleTap: betterPlayerController!.controlsEnabled
           ? () {
               if (BetterPlayerMultipleGestureDetector.of(context) != null) {
                 BetterPlayerMultipleGestureDetector.of(context)!
                     .onDoubleTap
                     ?.call();
+              }
+              if (_doubleTapConsumed) {
+                _doubleTapConsumed = false;
+                return;
               }
               cancelAndRestartTimer();
               _onPlayPause();
@@ -139,11 +165,17 @@ class _BetterPlayerCupertinoControlsState
               }
             }
           : null,
-      child: AbsorbPointer(
-          absorbing:
-              controlsNotVisible && betterPlayerController!.controlsEnabled,
-          child:
-              isFullScreen ? SafeArea(child: controlsColumn) : controlsColumn),
+      child: Stack(
+        children: [
+          AbsorbPointer(
+            absorbing:
+                controlsNotVisible && betterPlayerController!.controlsEnabled,
+            child:
+                isFullScreen ? SafeArea(child: controlsColumn) : controlsColumn,
+          ),
+          Positioned.fill(child: _buildDoubleTapOverlay()),
+        ],
+      ),
     );
   }
 
@@ -159,6 +191,7 @@ class _BetterPlayerCupertinoControlsState
     _expandCollapseTimer?.cancel();
     _initTimer?.cancel();
     _controlsVisibilityStreamSubscription?.cancel();
+    _doubleTapTimer?.cancel();
   }
 
   @override
@@ -643,6 +676,144 @@ class _BetterPlayerCupertinoControlsState
         ),
       ),
     );
+  }
+
+  // ===== Double-tap overlay and logic (same as Material) =====
+  Widget _buildDoubleTapOverlay() {
+    if (!betterPlayerController!.controlsEnabled) {
+      return const SizedBox();
+    }
+    final bool visible = _showDoubleTapOverlay && _doubleTapSide != null;
+    if (!visible) return const SizedBox();
+
+    final bool isLeft = _doubleTapSide == _CupertinoDoubleTapSide.left;
+    final Color dimColor = Colors.black.withOpacity(0.4);
+    final TextStyle labelStyle = const TextStyle(
+      color: Colors.white,
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+    );
+
+    return AnimatedOpacity(
+      opacity: visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 180),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 40,
+            child: Container(
+              color: isLeft ? dimColor : Colors.transparent,
+              child: isLeft
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(CupertinoIcons.gobackward_10,
+                                color: Colors.white, size: 34),
+                            const SizedBox(width: 8),
+                            Text(
+                              "${(_doubleTapAccumMs / 1000).round()}s",
+                              style: labelStyle,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+          const Expanded(flex: 20, child: SizedBox()),
+          Expanded(
+            flex: 40,
+            child: Container(
+              color: !isLeft ? dimColor : Colors.transparent,
+              child: !isLeft
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "${(_doubleTapAccumMs / 1000).round()}s",
+                              style: labelStyle,
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(CupertinoIcons.goforward_10,
+                                color: Colors.white, size: 34),
+                          ],
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    if (_betterPlayerController?.isLiveStream() == true) {
+      return; // no seek for live
+    }
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    final Size size = box.size;
+    final Offset local = box.globalToLocal(details.globalPosition);
+    final double x = local.dx;
+    final double width = size.width == 0 ? 1 : size.width;
+    final double ratio = x / width;
+
+    if (ratio < 0.4) {
+      _onDoubleTapZone(_CupertinoDoubleTapSide.left);
+    } else if (ratio > 0.6) {
+      _onDoubleTapZone(_CupertinoDoubleTapSide.right);
+    } else {
+      _doubleTapConsumed = false;
+    }
+  }
+
+  void _onDoubleTapZone(_CupertinoDoubleTapSide side) {
+    _doubleTapConsumed = true;
+    _doubleTapSide = side;
+    _showDoubleTapOverlay = true;
+    _doubleTapAccumMs = _doubleTapAccumMs + _doubleTapStepMs;
+
+    HapticFeedback.lightImpact();
+
+    _doubleTapTimer?.cancel();
+    _doubleTapTimer = Timer(
+      const Duration(milliseconds: _doubleTapGraceWindowMs),
+      _applyDoubleTapSeek,
+    );
+    setState(() {});
+  }
+
+  Future<void> _applyDoubleTapSeek() async {
+    if (_betterPlayerController == null || _controller == null) return;
+    final int currentMs = _controller!.value.position.inMilliseconds;
+    final int durationMs = _controller!.value.duration?.inMilliseconds ?? 0;
+    int delta = _doubleTapAccumMs *
+        (_doubleTapSide == _CupertinoDoubleTapSide.left ? -1 : 1);
+    int target = currentMs + delta;
+    if (target < 0) target = 0;
+    if (durationMs > 0 && target > durationMs) target = durationMs;
+
+    HapticFeedback.mediumImpact();
+
+    await _betterPlayerController!.seekTo(Duration(milliseconds: target));
+
+    _doubleTapTimer?.cancel();
+    _doubleTapTimer = null;
+    _doubleTapAccumMs = 0;
+    _doubleTapSide = null;
+    setState(() {
+      _showDoubleTapOverlay = false;
+    });
   }
 
   void _onPlayPause() {

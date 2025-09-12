@@ -12,6 +12,7 @@ import 'package:better_player/src/video_player/video_player.dart';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class BetterPlayerMaterialControls extends StatefulWidget {
   ///Callback used to send information if player bar is hidden or not
@@ -43,6 +44,17 @@ class _BetterPlayerMaterialControlsState
   VideoPlayerController? _controller;
   BetterPlayerController? _betterPlayerController;
   StreamSubscription? _controlsVisibilityStreamSubscription;
+
+  // Double-tap seek overlay state
+  static const int _doubleTapStepMs = 10000; // 10s per tap
+  static const int _doubleTapGraceWindowMs =
+      800; // 300-500ms suggested, use 400ms
+  Timer? _doubleTapTimer;
+  int _doubleTapAccumMs = 0;
+  bool _showDoubleTapOverlay = false;
+  bool _doubleTapConsumed =
+      false; // prevents onDoubleTap default when handled by zones
+  _DoubleTapSide? _doubleTapSide;
 
   BetterPlayerControlsConfiguration get _controlsConfiguration =>
       widget.controlsConfiguration;
@@ -88,12 +100,27 @@ class _BetterPlayerMaterialControlsState
                   : changePlayerControlsNotVisible(true);
             }
           : null,
+      onDoubleTapDown: betterPlayerController!.controlsEnabled
+          ? (details) {
+              if (BetterPlayerMultipleGestureDetector.of(context) != null) {
+                BetterPlayerMultipleGestureDetector.of(context)!
+                    .onDoubleTapDown
+                    ?.call(details);
+              }
+              _handleDoubleTapDown(details);
+            }
+          : null,
       onDoubleTap: betterPlayerController!.controlsEnabled
           ? () {
               if (BetterPlayerMultipleGestureDetector.of(context) != null) {
                 BetterPlayerMultipleGestureDetector.of(context)!
                     .onDoubleTap
                     ?.call();
+              }
+              // If we've handled double-tap in left/right zones, swallow default
+              if (_doubleTapConsumed) {
+                _doubleTapConsumed = false;
+                return;
               }
               cancelAndRestartTimer();
             }
@@ -107,40 +134,47 @@ class _BetterPlayerMaterialControlsState
               }
             }
           : null,
-      child: AbsorbPointer(
-        absorbing:
-            controlsNotVisible && betterPlayerController!.controlsEnabled,
-        child: AnimatedOpacity(
-          opacity: controlsNotVisible ? 0.0 : 1.0,
-          duration: _controlsConfiguration.controlsHideTime,
-          onEnd: _onPlayerHide,
-          child: Container(
-            color: _controlsConfiguration.controlBarColor,
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.topCenter,
-                    child: _buildTopBar(),
+      child: Stack(
+        children: [
+          AbsorbPointer(
+            absorbing:
+                controlsNotVisible && betterPlayerController!.controlsEnabled,
+            child: AnimatedOpacity(
+              opacity: controlsNotVisible ? 0.0 : 1.0,
+              duration: _controlsConfiguration.controlsHideTime,
+              onEnd: _onPlayerHide,
+              child: Container(
+                color: _controlsConfiguration.controlBarColor,
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: _buildTopBar(),
+                      ),
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: _wasLoading
+                              ? _buildLoadingWidget()
+                              : _buildHitArea(),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: _buildBottomBar(),
+                      ),
+                    ],
                   ),
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child:
-                          _wasLoading ? _buildLoadingWidget() : _buildHitArea(),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: _buildBottomBar(),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          // Double-tap overlay drawn outside of controls opacity
+          Positioned.fill(child: _buildDoubleTapOverlay()),
+        ],
       ),
     );
   }
@@ -157,6 +191,7 @@ class _BetterPlayerMaterialControlsState
     _initTimer?.cancel();
     _showAfterExpandCollapseTimer?.cancel();
     _controlsVisibilityStreamSubscription?.cancel();
+    _doubleTapTimer?.cancel();
   }
 
   @override
@@ -673,4 +708,154 @@ class _BetterPlayerMaterialControlsState
           AlwaysStoppedAnimation<Color>(_controlsConfiguration.loadingColor),
     );
   }
+
+  // ===== Double-tap overlay and logic =====
+
+  Widget _buildDoubleTapOverlay() {
+    if (!betterPlayerController!.controlsEnabled) {
+      return const SizedBox();
+    }
+    final bool visible = _showDoubleTapOverlay && _doubleTapSide != null;
+    if (!visible) return const SizedBox();
+
+    final bool isLeft = _doubleTapSide == _DoubleTapSide.left;
+    final Color dimColor = Colors.black.withOpacity(0.4);
+    final TextStyle labelStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 26,
+      fontWeight: FontWeight.w700,
+    );
+
+    return AnimatedOpacity(
+      opacity: visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 180),
+      child: Row(
+        children: [
+          // Left 40%
+          Expanded(
+            flex: 40,
+            child: Container(
+              color: isLeft ? dimColor : Colors.transparent,
+              child: isLeft
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.fast_rewind,
+                                color: Colors.white, size: 36),
+                            const SizedBox(width: 8),
+                            Text(
+                              "${(_doubleTapAccumMs / 1000).round()}s",
+                              style: labelStyle,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+          // Middle 20% neutral
+          const Expanded(flex: 20, child: SizedBox()),
+          // Right 40%
+          Expanded(
+            flex: 40,
+            child: Container(
+              color: !isLeft ? dimColor : Colors.transparent,
+              child: !isLeft
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "${(_doubleTapAccumMs / 1000).round()}s",
+                              style: labelStyle,
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.fast_forward,
+                                color: Colors.white, size: 36),
+                          ],
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    if (_betterPlayerController?.isLiveStream() == true) {
+      return; // no seek for live
+    }
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    final Size size = box.size;
+    final Offset local = box.globalToLocal(details.globalPosition);
+    final double x = local.dx;
+    final double width = size.width == 0 ? 1 : size.width;
+    final double ratio = x / width;
+
+    if (ratio < 0.4) {
+      _onDoubleTapZone(_DoubleTapSide.left);
+    } else if (ratio > 0.6) {
+      _onDoubleTapZone(_DoubleTapSide.right);
+    } else {
+      // neutral zone: let default onDoubleTap run
+      _doubleTapConsumed = false;
+    }
+  }
+
+  void _onDoubleTapZone(_DoubleTapSide side) {
+    _doubleTapConsumed = true; // prevent default onDoubleTap behavior
+    _doubleTapSide = side;
+    _showDoubleTapOverlay = true;
+    _doubleTapAccumMs = _doubleTapAccumMs + _doubleTapStepMs;
+
+    // Haptic feedback per tap (light)
+    HapticFeedback.lightImpact();
+
+    // Reset grace timer
+    _doubleTapTimer?.cancel();
+    _doubleTapTimer = Timer(
+      const Duration(milliseconds: _doubleTapGraceWindowMs),
+      _applyDoubleTapSeek,
+    );
+
+    setState(() {});
+  }
+
+  Future<void> _applyDoubleTapSeek() async {
+    if (_betterPlayerController == null || _controller == null) return;
+    final int currentMs = _controller!.value.position.inMilliseconds;
+    final int durationMs = _controller!.value.duration?.inMilliseconds ?? 0;
+    int delta =
+        _doubleTapAccumMs * (_doubleTapSide == _DoubleTapSide.left ? -1 : 1);
+    int target = currentMs + delta;
+    if (target < 0) target = 0;
+    if (durationMs > 0 && target > durationMs) target = durationMs;
+
+    // Haptic feedback medium when applying
+    HapticFeedback.mediumImpact();
+
+    await _betterPlayerController!.seekTo(Duration(milliseconds: target));
+
+    // Reset state and fade out overlay
+    _doubleTapTimer?.cancel();
+    _doubleTapTimer = null;
+    _doubleTapAccumMs = 0;
+    _doubleTapSide = null;
+    setState(() {
+      _showDoubleTapOverlay = false;
+    });
+  }
 }
+
+enum _DoubleTapSide { left, right }
