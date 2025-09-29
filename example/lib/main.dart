@@ -38,6 +38,7 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
       const BetterPlayerConfiguration(
         autoPlay: true,
         looping: false,
+        autoDetectFullscreenDeviceOrientation: true,
       ),
       betterPlayerDataSource: dataSource,
     );
