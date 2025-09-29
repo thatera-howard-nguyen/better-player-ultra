@@ -110,6 +110,29 @@ class _BetterPlayerState extends State<BetterPlayer>
       BetterPlayerUtils.log(exception.toString());
     }
     widget.controller.setupTranslations(locale);
+
+    // Set up orientation constraints for portrait videos
+    _setupOrientationConstraints();
+  }
+
+  ///Set up orientation constraints based on video aspect ratio
+  void _setupOrientationConstraints() {
+    // Listen for video initialization to set orientation constraints
+    widget.controller.videoPlayerController?.addListener(() {
+      if (mounted) {
+        final aspectRatio =
+            widget.controller.videoPlayerController?.value.aspectRatio ?? 1.0;
+        final isPortraitVideo = aspectRatio < 1.0;
+
+        if (isPortraitVideo) {
+          // Force portrait orientation immediately for portrait videos
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown,
+          ]);
+        }
+      }
+    });
   }
 
   @override
@@ -174,16 +197,38 @@ class _BetterPlayerState extends State<BetterPlayer>
       _currentOrientation = newOrientation;
     });
 
+    // Get video aspect ratio to determine if it's portrait or landscape video
+    final aspectRatio =
+        widget.controller.videoPlayerController?.value.aspectRatio ?? 1.0;
+    final isPortraitVideo = aspectRatio < 1.0;
+
     // Only handle automatic fullscreen if not manually triggered
     if (!_fullscreenTriggeredByManual) {
-      if (newOrientation == Orientation.landscape && !_isFullScreen) {
-        // Rotate to landscape - enter fullscreen
-        _fullscreenTriggeredByOrientation = true;
-        widget.controller.enterFullScreen();
-      } else if (newOrientation == Orientation.portrait && _isFullScreen) {
-        // Rotate to portrait - exit fullscreen
-        _fullscreenTriggeredByOrientation = true;
-        widget.controller.exitFullScreen();
+      if (isPortraitVideo) {
+        // For portrait videos: auto fullscreen in portrait mode, prevent landscape rotation
+        if (newOrientation == Orientation.portrait && !_isFullScreen) {
+          _fullscreenTriggeredByOrientation = true;
+          widget.controller.enterFullScreen();
+        }
+        // Prevent landscape rotation for portrait videos always
+        if (newOrientation == Orientation.landscape) {
+          // Force back to portrait orientation immediately
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown,
+          ]);
+        }
+      } else {
+        // For landscape videos: original logic
+        if (newOrientation == Orientation.landscape && !_isFullScreen) {
+          // Rotate to landscape - enter fullscreen
+          _fullscreenTriggeredByOrientation = true;
+          widget.controller.enterFullScreen();
+        } else if (newOrientation == Orientation.portrait && _isFullScreen) {
+          // Rotate to portrait - exit fullscreen
+          _fullscreenTriggeredByOrientation = true;
+          widget.controller.exitFullScreen();
+        }
       }
     }
   }
@@ -279,11 +324,13 @@ class _BetterPlayerState extends State<BetterPlayer>
           widget.controller.videoPlayerController?.value.aspectRatio ?? 1.0;
       List<DeviceOrientation> deviceOrientations;
       if (aspectRatio < 1.0) {
+        // Portrait video: force portrait orientation only
         deviceOrientations = [
           DeviceOrientation.portraitUp,
           DeviceOrientation.portraitDown
         ];
       } else {
+        // Landscape video: allow all orientations
         deviceOrientations = [
           DeviceOrientation.landscapeLeft,
           DeviceOrientation.landscapeRight,
