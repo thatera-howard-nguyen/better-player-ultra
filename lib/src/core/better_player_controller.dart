@@ -9,6 +9,7 @@ import 'package:better_player/src/video_player/video_player.dart';
 import 'package:better_player/src/video_player/video_player_platform_interface.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 ///Class used to control overall Better Player behavior. Main class to change
@@ -595,9 +596,27 @@ class BetterPlayerController {
       }
     }
 
+    // Force orientation constraints for portrait videos
+    _applyOrientationConstraintsForVideo();
+
     final startAt = betterPlayerConfiguration.startAt;
     if (startAt != null) {
       seekTo(startAt);
+    }
+  }
+
+  ///Apply orientation constraints based on video type
+  void _applyOrientationConstraintsForVideo() {
+    final aspectRatio = videoPlayerController?.value.aspectRatio ?? 1.0;
+    final isPortraitVideo = aspectRatio < 1.0;
+
+    if (isPortraitVideo &&
+        betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation) {
+      // Force portrait orientation for portrait videos
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
     }
   }
 

@@ -87,7 +87,9 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
             BetterPlayerUtils.calculateAspectRatio(context);
       }
     } else {
-      aspectRatio = betterPlayerController.getAspectRatio();
+      aspectRatio =
+          betterPlayerController.videoPlayerController?.value.aspectRatio ??
+              betterPlayerController.getAspectRatio();
     }
 
     aspectRatio ??= 16 / 9;
