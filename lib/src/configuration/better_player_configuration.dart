@@ -98,6 +98,11 @@ class BetterPlayerConfiguration {
   ///If [deviceOrientationsOnFullScreen] is true this is done automaticaly also.
   final bool autoDetectFullscreenAspectRatio;
 
+  ///Defines if player should auto detect video orientation and set appropriate BoxFit.
+  ///If true, portrait videos (aspect ratio <= 4:3) will use BoxFit.contain,
+  ///landscape videos (aspect ratio > 4:3) will use BoxFit.fill.
+  final bool autoDetectVideoFit;
+
   ///Defines flag which enables/disables lifecycle handling (pause on app closed,
   ///play on app resumed). Default value is true.
   final bool handleLifecycle;
@@ -164,6 +169,7 @@ class BetterPlayerConfiguration {
     this.translations,
     this.autoDetectFullscreenDeviceOrientation = false,
     this.autoDetectFullscreenAspectRatio = false,
+    this.autoDetectVideoFit = true,
     this.handleLifecycle = true,
     this.autoDispose = true,
     this.expandToFill = true,
@@ -199,6 +205,8 @@ class BetterPlayerConfiguration {
     Function(double visibilityFraction)? playerVisibilityChangedBehavior,
     List<BetterPlayerTranslations>? translations,
     bool? autoDetectFullscreenDeviceOrientation,
+    bool? autoDetectFullscreenAspectRatio,
+    bool? autoDetectVideoFit,
     bool? handleLifecycle,
     bool? autoDispose,
     bool? expandToFill,
@@ -242,6 +250,9 @@ class BetterPlayerConfiguration {
       autoDetectFullscreenDeviceOrientation:
           autoDetectFullscreenDeviceOrientation ??
               this.autoDetectFullscreenDeviceOrientation,
+      autoDetectFullscreenAspectRatio: autoDetectFullscreenAspectRatio ??
+          this.autoDetectFullscreenAspectRatio,
+      autoDetectVideoFit: autoDetectVideoFit ?? this.autoDetectVideoFit,
       handleLifecycle: handleLifecycle ?? this.handleLifecycle,
       autoDispose: autoDispose ?? this.autoDispose,
       expandToFill: expandToFill ?? this.expandToFill,

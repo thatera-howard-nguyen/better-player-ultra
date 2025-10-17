@@ -599,6 +599,9 @@ class BetterPlayerController {
     // Force orientation constraints for portrait videos
     _applyOrientationConstraintsForVideo();
 
+    // Auto detect video fit based on orientation
+    _autoDetectVideoFit();
+
     final startAt = betterPlayerConfiguration.startAt;
     if (startAt != null) {
       seekTo(startAt);
@@ -608,15 +611,60 @@ class BetterPlayerController {
   ///Apply orientation constraints based on video type
   void _applyOrientationConstraintsForVideo() {
     final aspectRatio = videoPlayerController?.value.aspectRatio ?? 1.0;
-    final isPortraitVideo = aspectRatio < 1.0;
 
-    if (isPortraitVideo &&
-        betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation) {
-      // Force portrait orientation for portrait videos
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
+    if (betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation) {
+      if (_isPortraitVideo(aspectRatio)) {
+        _applyPortraitVideoOrientationConstraints();
+      } else {
+        _applyLandscapeVideoOrientationConstraints();
+      }
+    }
+  }
+
+  ///Check if video is portrait based on aspect ratio
+  bool _isPortraitVideo(double aspectRatio) {
+    return aspectRatio <= 4.0 / 3.0;
+  }
+
+  ///Apply orientation constraints for portrait videos
+  void _applyPortraitVideoOrientationConstraints() {
+    BetterPlayerUtils.log("Portrait video - Applying orientation constraints");
+    // Force portrait orientation for portrait videos
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
+
+  ///Apply orientation constraints for landscape videos
+  void _applyLandscapeVideoOrientationConstraints() {
+    BetterPlayerUtils.log(
+        "Landscape video - Applying orientation constraints (allowing all orientations)");
+    // Allow all orientations for landscape videos to enable rotation
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  ///Auto detect video orientation and set appropriate BoxFit
+  void _autoDetectVideoFit() {
+    if (!betterPlayerConfiguration.autoDetectVideoFit) return;
+
+    final aspectRatio = videoPlayerController?.value.aspectRatio ?? 1.0;
+
+    if (_isPortraitVideo(aspectRatio)) {
+      // Portrait video - use contain to prevent distortion
+      _overriddenFit = BoxFit.contain;
+      BetterPlayerUtils.log(
+          "Auto detect video fit - Portrait video (aspect ratio: $aspectRatio) - using BoxFit.contain");
+    } else {
+      // Landscape video - can use fill for better experience
+      _overriddenFit = BoxFit.fill;
+      BetterPlayerUtils.log(
+          "Auto detect video fit - Landscape video (aspect ratio: $aspectRatio) - using BoxFit.fill");
     }
   }
 
