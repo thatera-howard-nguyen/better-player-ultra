@@ -630,9 +630,12 @@ class BetterPlayerController {
   void _applyPortraitVideoOrientationConstraints() {
     BetterPlayerUtils.log("Portrait video - Applying orientation constraints");
     // Force portrait orientation for portrait videos
+    // Skip if currently in fullscreen to avoid overriding manual fullscreen orientation
+    if (_isFullScreen) {
+      return;
+    }
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
     ]);
   }
 
@@ -641,9 +644,12 @@ class BetterPlayerController {
     BetterPlayerUtils.log(
         "Landscape video - Applying orientation constraints (allowing all orientations)");
     // Allow all orientations for landscape videos to enable rotation
+    // Skip if currently in fullscreen to avoid overriding manual fullscreen orientation
+    if (_isFullScreen) {
+      return;
+    }
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
