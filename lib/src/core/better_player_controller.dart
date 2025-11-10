@@ -599,9 +599,6 @@ class BetterPlayerController {
     // Force orientation constraints for portrait videos
     _applyOrientationConstraintsForVideo();
 
-    // Auto detect video fit based on orientation
-    _autoDetectVideoFit();
-
     final startAt = betterPlayerConfiguration.startAt;
     if (startAt != null) {
       seekTo(startAt);
@@ -653,25 +650,6 @@ class BetterPlayerController {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-  }
-
-  ///Auto detect video orientation and set appropriate BoxFit
-  void _autoDetectVideoFit() {
-    if (!betterPlayerConfiguration.autoDetectVideoFit) return;
-
-    final aspectRatio = videoPlayerController?.value.aspectRatio ?? 1.0;
-
-    if (_isPortraitVideo(aspectRatio)) {
-      // Portrait video - use contain to prevent distortion
-      _overriddenFit = BoxFit.contain;
-      BetterPlayerUtils.log(
-          "Auto detect video fit - Portrait video (aspect ratio: $aspectRatio) - using BoxFit.contain");
-    } else {
-      // Landscape video - can use fill for better experience
-      _overriddenFit = BoxFit.fill;
-      BetterPlayerUtils.log(
-          "Auto detect video fit - Landscape video (aspect ratio: $aspectRatio) - using BoxFit.fill");
-    }
   }
 
   ///Method which is invoked when full screen changes.
@@ -1140,11 +1118,11 @@ class BetterPlayerController {
     _overriddenFit = fit;
   }
 
-  ///Get fit used in current video. If fit is null, then fit from
-  ///BetterPlayerConfiguration will be used. Otherwise [_overriddenFit] will be
-  ///used.
+  ///Get fit used in current video. Always returns BoxFit.contain to prevent
+  ///video stretching. If [_overriddenFit] is set, it will be used, otherwise
+  ///BoxFit.contain is returned.
   BoxFit getFit() {
-    return _overriddenFit ?? betterPlayerConfiguration.fit;
+    return _overriddenFit ?? BoxFit.contain;
   }
 
   ///Enable Picture in Picture (PiP) mode. [betterPlayerGlobalKey] is required

@@ -99,8 +99,8 @@ class BetterPlayerConfiguration {
   final bool autoDetectFullscreenAspectRatio;
 
   ///Defines if player should auto detect video orientation and set appropriate BoxFit.
-  ///If true, portrait videos (aspect ratio <= 4:3) will use BoxFit.contain,
-  ///landscape videos (aspect ratio > 4:3) will use BoxFit.fill.
+  ///If true, both portrait and landscape videos will use BoxFit.contain to prevent
+  ///video stretching when rotating.
   final bool autoDetectVideoFit;
 
   ///Defines flag which enables/disables lifecycle handling (pause on app closed,
@@ -161,7 +161,7 @@ class BetterPlayerConfiguration {
     this.eventListener,
     this.subtitlesConfiguration = const BetterPlayerSubtitlesConfiguration(),
     this.controlsConfiguration = const BetterPlayerControlsConfiguration(),
-    this.fit = BoxFit.fill,
+    this.fit = BoxFit.contain,
     this.rotation = 0,
     this.playerVisibilityChangedBehavior,
     this.translations,
