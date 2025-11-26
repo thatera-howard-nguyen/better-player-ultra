@@ -108,10 +108,17 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
       ),
     );
 
+    final maybeAmbientWrapped = isAmbientCandidate
+        ? BetterPlayerAmbientBackdrop(
+            controller: betterPlayerController,
+            child: innerContainer,
+          )
+        : innerContainer;
+
     if (betterPlayerController.betterPlayerConfiguration.expandToFill) {
-      return Center(child: innerContainer);
+      return Center(child: maybeAmbientWrapped);
     } else {
-      return innerContainer;
+      return maybeAmbientWrapped;
     }
   }
 
