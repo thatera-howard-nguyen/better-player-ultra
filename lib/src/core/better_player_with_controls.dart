@@ -28,7 +28,7 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
       widget.controller!.betterPlayerControlsConfiguration;
 
   final StreamController<bool> playerVisibilityStreamController =
-      StreamController();
+      StreamController.broadcast();
 
   bool _initialized = false;
 
@@ -93,10 +93,15 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
     }
 
     aspectRatio ??= 16 / 9;
+    final bool isAmbientCandidate =
+        _shouldUseAmbientBackground(betterPlayerController, context);
+
     final innerContainer = Container(
       width: double.infinity,
-      color: betterPlayerController
-          .betterPlayerConfiguration.controlsConfiguration.backgroundColor,
+      color: isAmbientCandidate
+          ? Colors.transparent
+          : betterPlayerController
+              .betterPlayerConfiguration.controlsConfiguration.backgroundColor,
       child: AspectRatio(
         aspectRatio: aspectRatio,
         child: _buildPlayerWithControls(betterPlayerController, context),
@@ -152,6 +157,24 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
         ],
       ),
     );
+  }
+
+  bool _shouldUseAmbientBackground(
+      BetterPlayerController controller, BuildContext context) {
+    final configuration = controller.betterPlayerConfiguration;
+    if (!configuration.enableAmbientMode) {
+      return false;
+    }
+    if (configuration.ambientModeFullScreenOnly && !controller.isFullScreen) {
+      return false;
+    }
+    if (configuration.ambientModeLandscapeOnly) {
+      final orientation = MediaQuery.maybeOf(context)?.orientation;
+      if (orientation == null || orientation != Orientation.landscape) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Widget _buildPlaceholder(BetterPlayerController betterPlayerController) {

@@ -133,6 +133,24 @@ class BetterPlayerConfiguration {
   ///Widget to display on the left side of the top bar
   final Widget? widgetInTopBarLeft;
 
+  ///Enable replicated blurred background behind the video similar to YouTube Ambient Mode.
+  final bool enableAmbientMode;
+
+  ///Show ambient only when the player is fullscreen.
+  final bool ambientModeFullScreenOnly;
+
+  ///Restrict ambient effect to landscape orientation (recommended for horizontal fullscreen).
+  final bool ambientModeLandscapeOnly;
+
+  ///Blur sigma applied to the replicated video surface.
+  final double ambientBlurSigma;
+
+  ///Scale factor for the replicated video surface relative to original.
+  final double ambientScale;
+
+  ///Darken overlay (0-1) placed above the blurred video to reduce glare.
+  final double ambientDarken;
+
   const BetterPlayerConfiguration({
     this.aspectRatio,
     this.autoPlay = false,
@@ -175,6 +193,12 @@ class BetterPlayerConfiguration {
     this.mixWithOthers = false,
     this.widgetBelowSeekBar,
     this.widgetInTopBarLeft,
+    this.enableAmbientMode = true,
+    this.ambientModeFullScreenOnly = true,
+    this.ambientModeLandscapeOnly = true,
+    this.ambientBlurSigma = 60,
+    this.ambientScale = 1.25,
+    this.ambientDarken = 0.55,
   });
 
   BetterPlayerConfiguration copyWith({
@@ -212,6 +236,12 @@ class BetterPlayerConfiguration {
     bool? mixWithOthers,
     Widget? widgetBelowSeekBar,
     Widget? widgetInTopBarLeft,
+    bool? enableAmbientMode,
+    bool? ambientModeFullScreenOnly,
+    bool? ambientModeLandscapeOnly,
+    double? ambientBlurSigma,
+    double? ambientScale,
+    double? ambientDarken,
   }) {
     return BetterPlayerConfiguration(
       aspectRatio: aspectRatio ?? this.aspectRatio,
@@ -258,6 +288,14 @@ class BetterPlayerConfiguration {
       mixWithOthers: mixWithOthers ?? this.mixWithOthers,
       widgetBelowSeekBar: widgetBelowSeekBar ?? this.widgetBelowSeekBar,
       widgetInTopBarLeft: widgetInTopBarLeft ?? this.widgetInTopBarLeft,
+      enableAmbientMode: enableAmbientMode ?? this.enableAmbientMode,
+      ambientModeFullScreenOnly:
+          ambientModeFullScreenOnly ?? this.ambientModeFullScreenOnly,
+      ambientModeLandscapeOnly:
+          ambientModeLandscapeOnly ?? this.ambientModeLandscapeOnly,
+      ambientBlurSigma: ambientBlurSigma ?? this.ambientBlurSigma,
+      ambientScale: ambientScale ?? this.ambientScale,
+      ambientDarken: ambientDarken ?? this.ambientDarken,
     );
   }
 }
