@@ -318,7 +318,7 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
       return _buildTrackRow(entry.value, entry.key);
     }).toList();
 
-    // Xử lý resolution-based videos nếu có
+    // Handle resolution-based videos if available
     final resolutions =
         betterPlayerController!.betterPlayerDataSource!.resolutions;
     resolutions?.forEach((key, value) {
