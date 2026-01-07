@@ -466,14 +466,31 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         const Duration(milliseconds: 300),
         (Timer timer) async {
           if (_isDisposed) {
+            timer.cancel();
             return;
           }
           final Duration? newPosition = await position;
           final DateTime? newAbsolutePosition = await absolutePosition;
           // ignore: invariant_booleans
           if (_isDisposed) {
+            timer.cancel();
             return;
           }
+
+          // Check if video has finished then stop timer
+          final Duration? duration = value.duration;
+          if (duration != null &&
+              newPosition != null &&
+              newPosition >= duration) {
+            timer.cancel();
+            // Ensure position doesn't exceed duration
+            value = value.copyWith(
+              isPlaying: false,
+              position: duration,
+            );
+            return;
+          }
+
           _updatePosition(newPosition, absolutePosition: newAbsolutePosition);
           if (_seekPosition != null && newPosition != null) {
             final difference =
@@ -530,8 +547,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     bool isPlaying = value.isPlaying;
     final int positionInMs = value.position.inMilliseconds;
     final int durationInMs = value.duration?.inMilliseconds ?? 0;
+    final bool isVideoFinished =
+        positionInMs >= durationInMs && durationInMs > 0;
 
-    if (positionInMs >= durationInMs && position?.inMilliseconds == 0) {
+    // If video has finished and seek to a different position, automatically play again
+    if (isVideoFinished) {
       isPlaying = true;
     }
     if (_isDisposed) {

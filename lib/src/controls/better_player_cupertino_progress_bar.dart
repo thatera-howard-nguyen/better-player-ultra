@@ -195,9 +195,22 @@ class _ProgressBarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Check valid size to avoid NaN
+    if (!size.width.isFinite ||
+        !size.height.isFinite ||
+        size.width <= 0 ||
+        size.height <= 0) {
+      return;
+    }
+
     const barHeight = 5.0;
     const handleHeight = 6.0;
     final baseOffset = size.height / 2 - barHeight / 2.0;
+
+    // Check valid baseOffset
+    if (!baseOffset.isFinite) {
+      return;
+    }
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -214,11 +227,24 @@ class _ProgressBarPainter extends CustomPainter {
     }
     final double playedPartPercent =
         value.position.inMilliseconds / value.duration!.inMilliseconds;
-    final double playedPart =
-        playedPartPercent > 1 ? size.width : playedPartPercent * size.width;
+    final double playedPart = (playedPartPercent.isNaN || playedPartPercent < 0)
+        ? 0.0
+        : (playedPartPercent > 1 ? size.width : playedPartPercent * size.width);
+
+    // Ensure playedPart is valid
+    if (!playedPart.isFinite || playedPart < 0) {
+      return;
+    }
+
     for (final DurationRange range in value.buffered) {
-      final double start = range.startFraction(value.duration!) * size.width;
-      final double end = range.endFraction(value.duration!) * size.width;
+      double start = range.startFraction(value.duration!) * size.width;
+      double end = range.endFraction(value.duration!) * size.width;
+
+      // Check valid start and end
+      if (start.isNaN || !start.isFinite) start = 0.0;
+      if (end.isNaN || !end.isFinite) end = 0.0;
+      if (start < 0) start = 0.0;
+      if (end < 0) end = 0.0;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromPoints(
