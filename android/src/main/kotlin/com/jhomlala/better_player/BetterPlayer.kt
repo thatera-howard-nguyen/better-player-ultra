@@ -155,8 +155,7 @@ internal class BetterPlayer(
                         ) { uuid: UUID? ->
                             try {
                                 val mediaDrm = FrameworkMediaDrm.newInstance(uuid!!)
-                                // Force L3.
-                                mediaDrm.setPropertyString("securityLevel", "L3")
+                                // Use device's highest available security level by default
                                 return@setUuidAndExoMediaDrmProvider mediaDrm
                             } catch (e: UnsupportedDrmException) {
                                 return@setUuidAndExoMediaDrmProvider DummyExoMediaDrm()
@@ -340,7 +339,7 @@ internal class BetterPlayer(
                         .build()
                 }
                 mediaSession?.setPlaybackState(playbackState)
-                refreshHandler?.postDelayed(refreshRunnable!!, 1000)
+                refreshHandler?.postDelayed(refreshRunnable!!, 5000)
             }
             refreshHandler?.postDelayed(refreshRunnable!!, 0)
         }

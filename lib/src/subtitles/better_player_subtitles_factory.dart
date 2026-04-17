@@ -46,8 +46,8 @@ class BetterPlayerSubtitlesFactory {
 
   static Future<List<BetterPlayerSubtitle>> _parseSubtitlesFromNetwork(
       BetterPlayerSubtitlesSource source) async {
+    final client = HttpClient();
     try {
-      final client = HttpClient();
       final List<BetterPlayerSubtitle> subtitles = [];
       for (final String? url in source.urls!) {
         final request = await client.getUrl(Uri.parse(url!));
@@ -62,13 +62,14 @@ class BetterPlayerSubtitlesFactory {
         final cacheList = _parseString(data);
         subtitles.addAll(cacheList);
       }
-      client.close();
 
       BetterPlayerUtils.log("Parsed total subtitles: ${subtitles.length}");
       return subtitles;
     } catch (exception) {
       BetterPlayerUtils.log(
           "Failed to read subtitles from network: $exception");
+    } finally {
+      client.close();
     }
     return [];
   }

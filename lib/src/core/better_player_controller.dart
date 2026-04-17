@@ -1369,6 +1369,7 @@ class BetterPlayerController {
         await videoPlayerController!.dispose();
       }
       _eventListeners.clear();
+      renderedSubtitle = null;
       _nextVideoTimer?.cancel();
       await _nextVideoTimeStreamController.close();
       await _controlsVisibilityStreamController.close();
@@ -1376,8 +1377,12 @@ class BetterPlayerController {
       _disposed = true;
       await _controllerEventStreamController.close();
 
-      // Delete files async
-      _tempFiles.forEach((file) => file.delete());
+      // Delete temp files
+      for (final file in _tempFiles) {
+        try {
+          await file.delete();
+        } catch (_) {}
+      }
     }
   }
 }

@@ -90,52 +90,49 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
   Widget _buildMoreOptionsList() {
     final translations = betterPlayerController!.translations;
     return SingleChildScrollView(
-      // ignore: avoid_unnecessary_containers
-      child: Container(
-        child: Column(
-          children: [
-            if (betterPlayerControlsConfiguration.enablePlaybackSpeed)
-              _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.playbackSpeedIcon,
-                  translations.overflowMenuPlaybackSpeed, () {
-                Navigator.of(context).pop();
-                _showSpeedChooserWidget();
-              }),
-            if (betterPlayerControlsConfiguration.enableSubtitles)
-              _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.subtitlesIcon,
-                  translations.overflowMenuSubtitles, () {
-                Navigator.of(context).pop();
-                _showSubtitlesSelectionWidget();
-              }),
-            if (betterPlayerControlsConfiguration.enableQualities)
-              _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.qualitiesIcon,
-                  translations.overflowMenuQuality, () {
-                Navigator.of(context).pop();
-                _showQualitiesSelectionWidget();
-              }),
-            if (betterPlayerControlsConfiguration.enableAudioTracks)
-              _buildMoreOptionsListRow(
-                  betterPlayerControlsConfiguration.audioTracksIcon,
-                  translations.overflowMenuAudioTracks, () {
-                Navigator.of(context).pop();
-                _showAudioTracksSelectionWidget();
-              }),
-            if (betterPlayerControlsConfiguration
-                .overflowMenuCustomItems.isNotEmpty)
-              ...betterPlayerControlsConfiguration.overflowMenuCustomItems.map(
-                (customItem) => _buildMoreOptionsListRow(
-                  customItem.icon,
-                  customItem.title,
-                  () {
-                    Navigator.of(context).pop();
-                    customItem.onClicked.call();
-                  },
-                ),
-              )
-          ],
-        ),
+      child: Column(
+        children: [
+          if (betterPlayerControlsConfiguration.enablePlaybackSpeed)
+            _buildMoreOptionsListRow(
+                betterPlayerControlsConfiguration.playbackSpeedIcon,
+                translations.overflowMenuPlaybackSpeed, () {
+              Navigator.of(context).pop();
+              _showSpeedChooserWidget();
+            }),
+          if (betterPlayerControlsConfiguration.enableSubtitles)
+            _buildMoreOptionsListRow(
+                betterPlayerControlsConfiguration.subtitlesIcon,
+                translations.overflowMenuSubtitles, () {
+              Navigator.of(context).pop();
+              _showSubtitlesSelectionWidget();
+            }),
+          if (betterPlayerControlsConfiguration.enableQualities)
+            _buildMoreOptionsListRow(
+                betterPlayerControlsConfiguration.qualitiesIcon,
+                translations.overflowMenuQuality, () {
+              Navigator.of(context).pop();
+              _showQualitiesSelectionWidget();
+            }),
+          if (betterPlayerControlsConfiguration.enableAudioTracks)
+            _buildMoreOptionsListRow(
+                betterPlayerControlsConfiguration.audioTracksIcon,
+                translations.overflowMenuAudioTracks, () {
+              Navigator.of(context).pop();
+              _showAudioTracksSelectionWidget();
+            }),
+          if (betterPlayerControlsConfiguration
+              .overflowMenuCustomItems.isNotEmpty)
+            ...betterPlayerControlsConfiguration.overflowMenuCustomItems.map(
+              (customItem) => _buildMoreOptionsListRow(
+                customItem.icon,
+                customItem.title,
+                () {
+                  Navigator.of(context).pop();
+                  customItem.onClicked.call();
+                },
+              ),
+            )
+        ],
       ),
     );
   }
@@ -181,31 +178,13 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
     final bool isSelected =
         betterPlayerController!.videoPlayerController!.value.speed == value;
 
-    return BetterPlayerMaterialClickableWidget(
+    return _buildSelectionRow(
+      label: "$value x",
+      isSelected: isSelected,
       onTap: () {
         Navigator.of(context).pop();
         betterPlayerController!.setSpeed(value);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            SizedBox(width: isSelected ? 8 : 16),
-            Visibility(
-                visible: isSelected,
-                child: Icon(
-                  Icons.check_outlined,
-                  color:
-                      betterPlayerControlsConfiguration.overflowModalTextColor,
-                )),
-            const SizedBox(width: 16),
-            Text(
-              "$value x",
-              style: _getOverflowMenuElementTextStyle(isSelected),
-            )
-          ],
-        ),
-      ),
     );
   }
 
@@ -258,34 +237,16 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
         (subtitlesSource.type == BetterPlayerSubtitlesSourceType.none &&
             subtitlesSource.type == selectedSourceType!.type);
 
-    return BetterPlayerMaterialClickableWidget(
+    return _buildSelectionRow(
+      label: subtitlesSource.type == BetterPlayerSubtitlesSourceType.none
+          ? betterPlayerController!.translations.generalNone
+          : subtitlesSource.name ??
+              betterPlayerController!.translations.generalDefault,
+      isSelected: isSelected,
       onTap: () {
         Navigator.of(context).pop();
         betterPlayerController!.setupSubtitleSource(subtitlesSource);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            SizedBox(width: isSelected ? 8 : 16),
-            Visibility(
-                visible: isSelected,
-                child: Icon(
-                  Icons.check_outlined,
-                  color:
-                      betterPlayerControlsConfiguration.overflowModalTextColor,
-                )),
-            const SizedBox(width: 16),
-            Text(
-              subtitlesSource.type == BetterPlayerSubtitlesSourceType.none
-                  ? betterPlayerController!.translations.generalNone
-                  : subtitlesSource.name ??
-                      betterPlayerController!.translations.generalDefault,
-              style: _getOverflowMenuElementTextStyle(isSelected),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -348,62 +309,26 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
         betterPlayerController!.betterPlayerAsmsTrack;
     final bool isSelected = selectedTrack != null && selectedTrack == track;
 
-    return BetterPlayerMaterialClickableWidget(
+    return _buildSelectionRow(
+      label: label,
+      isSelected: isSelected,
       onTap: () {
         Navigator.of(context).pop();
         betterPlayerController!.setTrack(track);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            SizedBox(width: isSelected ? 8 : 16),
-            Visibility(
-              visible: isSelected,
-              child: Icon(
-                Icons.check_outlined,
-                color: betterPlayerControlsConfiguration.overflowModalTextColor,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              label,
-              style: _getOverflowMenuElementTextStyle(isSelected),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildResolutionSelectionRow(String name, String url) {
     final bool isSelected =
         url == betterPlayerController!.betterPlayerDataSource!.url;
-    return BetterPlayerMaterialClickableWidget(
+    return _buildSelectionRow(
+      label: name,
+      isSelected: isSelected,
       onTap: () {
         Navigator.of(context).pop();
         betterPlayerController!.setResolution(url);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            SizedBox(width: isSelected ? 8 : 16),
-            Visibility(
-                visible: isSelected,
-                child: Icon(
-                  Icons.check_outlined,
-                  color:
-                      betterPlayerControlsConfiguration.overflowModalTextColor,
-                )),
-            const SizedBox(width: 16),
-            Text(
-              name,
-              style: _getOverflowMenuElementTextStyle(isSelected),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -438,26 +363,40 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
 
   Widget _buildAudioTrackRow(
       BetterPlayerAsmsAudioTrack audioTrack, bool isSelected) {
-    return BetterPlayerMaterialClickableWidget(
+    return _buildSelectionRow(
+      label: audioTrack.label!,
+      isSelected: isSelected,
       onTap: () {
         Navigator.of(context).pop();
         betterPlayerController!.setAudioTrack(audioTrack);
       },
+    );
+  }
+
+  /// Shared selection row widget used by speed, subtitle, track, resolution,
+  /// and audio track selection menus.
+  Widget _buildSelectionRow({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return BetterPlayerMaterialClickableWidget(
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         child: Row(
           children: [
             SizedBox(width: isSelected ? 8 : 16),
             Visibility(
-                visible: isSelected,
-                child: Icon(
-                  Icons.check_outlined,
-                  color:
-                      betterPlayerControlsConfiguration.overflowModalTextColor,
-                )),
+              visible: isSelected,
+              child: Icon(
+                Icons.check_outlined,
+                color: betterPlayerControlsConfiguration.overflowModalTextColor,
+              ),
+            ),
             const SizedBox(width: 16),
             Text(
-              audioTrack.label!,
+              label,
               style: _getOverflowMenuElementTextStyle(isSelected),
             ),
           ],
@@ -472,7 +411,7 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
       color: isSelected
           ? betterPlayerControlsConfiguration.overflowModalTextColor
           : betterPlayerControlsConfiguration.overflowModalTextColor
-              .withOpacity(0.7),
+              .withValues(alpha: 0.7),
     );
   }
 

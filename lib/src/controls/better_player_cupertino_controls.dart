@@ -64,6 +64,7 @@ class _BetterPlayerCupertinoControlsState
   ///Builds main widget of the controls.
   Widget _buildMainWidget() {
     _betterPlayerController = BetterPlayerController.of(context);
+    _controller = _betterPlayerController!.videoPlayerController;
 
     if (_latestValue?.hasError == true) {
       return Container(
@@ -72,8 +73,6 @@ class _BetterPlayerCupertinoControlsState
       );
     }
 
-    _betterPlayerController = BetterPlayerController.of(context);
-    _controller = _betterPlayerController!.videoPlayerController;
     final backgroundColor = _controlsConfiguration.controlBarColor;
     final iconColor = _controlsConfiguration.iconsColor;
     final orientation = MediaQuery.of(context).orientation;
@@ -302,9 +301,7 @@ class _BetterPlayerCupertinoControlsState
                 _hideTimer?.cancel();
                 changePlayerControlsNotVisible(false);
               },
-        child: Container(
-          color: Colors.transparent,
-        ),
+        child: const SizedBox.expand(),
       ),
     );
   }
@@ -785,7 +782,7 @@ class _BetterPlayerCupertinoControlsState
                     right: buttonPadding,
                   ),
                   decoration: BoxDecoration(
-                    color: backgroundColor.withOpacity(0.5),
+                    color: backgroundColor.withValues(alpha: 0.5),
                   ),
                   child: Center(
                     child: Icon(

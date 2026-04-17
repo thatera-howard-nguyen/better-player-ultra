@@ -35,6 +35,9 @@ class _BetterPlayerSubtitlesDrawerState
   BetterPlayerSubtitlesConfiguration? _configuration;
   bool _playerVisible = false;
 
+  ///Currently displayed subtitle (cached to avoid unnecessary rebuilds)
+  BetterPlayerSubtitle? _currentSubtitle;
+
   ///Stream used to detect if play controls are visible or not
   late StreamSubscription _visibilityStreamSubscription;
 
@@ -83,16 +86,19 @@ class _BetterPlayerSubtitlesDrawerState
   ///Called when player state has changed, i.e. new player position, etc.
   void _updateState() {
     if (mounted) {
-      setState(() {
-        _latestValue =
-            widget.betterPlayerController.videoPlayerController!.value;
-      });
+      _latestValue = widget.betterPlayerController.videoPlayerController!.value;
+      final newSubtitle = _getSubtitleAtCurrentPosition();
+      if (newSubtitle != _currentSubtitle) {
+        setState(() {
+          _currentSubtitle = newSubtitle;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final BetterPlayerSubtitle? subtitle = _getSubtitleAtCurrentPosition();
+    final BetterPlayerSubtitle? subtitle = _currentSubtitle;
     widget.betterPlayerController.renderedSubtitle = subtitle;
     final List<String> subtitles = subtitle?.texts ?? [];
     final List<Widget> textWidgets =
@@ -116,17 +122,31 @@ class _BetterPlayerSubtitlesDrawerState
     );
   }
 
+  /// Binary search for the subtitle at the current position.
+  /// Assumes subtitles are sorted by start time (which they are from parsing).
   BetterPlayerSubtitle? _getSubtitleAtCurrentPosition() {
     if (_latestValue == null) {
       return null;
     }
 
     final Duration position = _latestValue!.position;
-    for (final BetterPlayerSubtitle subtitle
-        in widget.betterPlayerController.subtitlesLines) {
-      if (subtitle.start! <= position && subtitle.end! >= position) {
-        return subtitle;
+    final lines = widget.betterPlayerController.subtitlesLines;
+    if (lines.isEmpty) return null;
+
+    // Binary search: find the last subtitle whose start <= position
+    int lo = 0, hi = lines.length - 1;
+    int result = -1;
+    while (lo <= hi) {
+      final mid = (lo + hi) >> 1;
+      if (lines[mid].start! <= position) {
+        result = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
       }
+    }
+    if (result >= 0 && lines[result].end! >= position) {
+      return lines[result];
     }
     return null;
   }

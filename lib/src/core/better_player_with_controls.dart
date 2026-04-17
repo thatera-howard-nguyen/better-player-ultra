@@ -60,11 +60,14 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
   }
 
   void _onControllerChanged(BetterPlayerControllerEvent event) {
-    setState(() {
-      if (!_initialized) {
+    if (!_initialized) {
+      setState(() {
         _initialized = true;
-      }
-    });
+      });
+    } else if (event == BetterPlayerControllerEvent.setupDataSource ||
+        event == BetterPlayerControllerEvent.changeSubtitles) {
+      setState(() {});
+    }
   }
 
   @override
@@ -122,7 +125,7 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
     }
   }
 
-  Container _buildPlayerWithControls(
+  Widget _buildPlayerWithControls(
       BetterPlayerController betterPlayerController, BuildContext context) {
     final configuration = betterPlayerController.betterPlayerConfiguration;
     var rotation = configuration.rotation;
@@ -132,37 +135,34 @@ class _BetterPlayerWithControlsState extends State<BetterPlayerWithControls> {
       rotation = 0;
     }
     if (betterPlayerController.betterPlayerDataSource == null) {
-      return Container();
+      return const SizedBox();
     }
     _initialized = true;
 
     final bool placeholderOnTop =
         betterPlayerController.betterPlayerConfiguration.placeholderOnTop;
-    // ignore: avoid_unnecessary_containers
-    return Container(
-      child: Stack(
-        fit: StackFit.passthrough,
-        children: <Widget>[
-          if (placeholderOnTop) _buildPlaceholder(betterPlayerController),
-          Transform.rotate(
-            angle: rotation * pi / 180,
-            child: _BetterPlayerVideoFitWidget(
-              betterPlayerController,
-              betterPlayerController.getFit(),
-            ),
+    return Stack(
+      fit: StackFit.passthrough,
+      children: <Widget>[
+        if (placeholderOnTop) _buildPlaceholder(betterPlayerController),
+        Transform.rotate(
+          angle: rotation * pi / 180,
+          child: _BetterPlayerVideoFitWidget(
+            betterPlayerController,
+            betterPlayerController.getFit(),
           ),
-          betterPlayerController.betterPlayerConfiguration.overlay ??
-              Container(),
-          BetterPlayerSubtitlesDrawer(
-            betterPlayerController: betterPlayerController,
-            betterPlayerSubtitlesConfiguration: subtitlesConfiguration,
-            subtitles: betterPlayerController.subtitlesLines,
-            playerVisibilityStream: playerVisibilityStreamController.stream,
-          ),
-          if (!placeholderOnTop) _buildPlaceholder(betterPlayerController),
-          _buildControls(context, betterPlayerController),
-        ],
-      ),
+        ),
+        betterPlayerController.betterPlayerConfiguration.overlay ??
+            const SizedBox(),
+        BetterPlayerSubtitlesDrawer(
+          betterPlayerController: betterPlayerController,
+          betterPlayerSubtitlesConfiguration: subtitlesConfiguration,
+          subtitles: betterPlayerController.subtitlesLines,
+          playerVisibilityStream: playerVisibilityStreamController.stream,
+        ),
+        if (!placeholderOnTop) _buildPlaceholder(betterPlayerController),
+        _buildControls(context, betterPlayerController),
+      ],
     );
   }
 
@@ -287,6 +287,8 @@ class _BetterPlayerVideoFitWidgetState
         oldWidget.betterPlayerController.videoPlayerController!
             .removeListener(_initializedListener!);
       }
+      _controllerEventSubscription?.cancel();
+      _controllerEventSubscription = null;
       _initialized = false;
       _initialize();
     }
