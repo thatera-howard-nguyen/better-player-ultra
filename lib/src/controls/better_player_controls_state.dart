@@ -226,8 +226,7 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
           type: BetterPlayerSubtitlesSourceType.none));
     }
 
-    _showModalBottomSheet(
-        subtitles.map((source) => _buildSubtitlesSourceRow(source)).toList());
+    _showModalBottomSheet(subtitles.map(_buildSubtitlesSourceRow).toList());
   }
 
   Widget _buildSubtitlesSourceRow(BetterPlayerSubtitlesSource subtitlesSource) {

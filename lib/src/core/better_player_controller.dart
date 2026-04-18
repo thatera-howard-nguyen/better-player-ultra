@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'package:better_player/better_player.dart';
 import 'package:better_player/src/configuration/better_player_controller_event.dart';
@@ -50,9 +51,10 @@ class BetterPlayerController {
   BetterPlayerControlsConfiguration get betterPlayerControlsConfiguration =>
       _betterPlayerControlsConfiguration;
 
-  ///Expose all active eventListeners
-  List<Function(BetterPlayerEvent)?> get eventListeners =>
-      _eventListeners.sublist(1);
+  ///Expose all active eventListeners. Skips the first (configuration) listener
+  ///without allocating a new list on every access.
+  Iterable<Function(BetterPlayerEvent)?> get eventListeners =>
+      _eventListeners.skip(1);
 
   /// Defines a event listener where video player events will be send.
   Function(BetterPlayerEvent)? get eventListener =>
@@ -78,7 +80,8 @@ class BetterPlayerController {
 
   ///List of BetterPlayerSubtitlesSources.
   List<BetterPlayerSubtitlesSource> get betterPlayerSubtitlesSourceList =>
-      _betterPlayerSubtitlesSourceList;
+      UnmodifiableListView<BetterPlayerSubtitlesSource>(
+          _betterPlayerSubtitlesSourceList);
   BetterPlayerSubtitlesSource? _betterPlayerSubtitlesSource;
 
   ///Currently used subtitles source.
@@ -93,7 +96,7 @@ class BetterPlayerController {
 
   ///List of tracks available for current data source. Used only for HLS / DASH.
   List<BetterPlayerAsmsTrack> get betterPlayerAsmsTracks =>
-      _betterPlayerAsmsTracks;
+      UnmodifiableListView<BetterPlayerAsmsTrack>(_betterPlayerAsmsTracks);
 
   ///Currently selected player track. Used only for HLS / DASH.
   BetterPlayerAsmsTrack? _betterPlayerAsmsTrack;
@@ -206,7 +209,7 @@ class BetterPlayerController {
   bool _asmsSegmentsLoading = false;
 
   ///List of loaded ASMS segments
-  final List<String> _asmsSegmentsLoaded = [];
+  final Set<String> _asmsSegmentsLoaded = <String>{};
 
   ///Currently displayed [BetterPlayerSubtitle].
   BetterPlayerSubtitle? renderedSubtitle;
@@ -261,7 +264,7 @@ class BetterPlayerController {
     }
 
     ///Clear asms tracks
-    betterPlayerAsmsTracks.clear();
+    _betterPlayerAsmsTracks.clear();
 
     ///Setup subtitles
     final List<BetterPlayerSubtitlesSource>? betterPlayerSubtitlesSourceList =

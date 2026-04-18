@@ -17,6 +17,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class VideoItem {
+  const VideoItem({required this.title, required this.url});
+
+  final String title;
+  final String url;
+}
+
+const List<VideoItem> _videos = <VideoItem>[
+  VideoItem(
+    title: 'Accrobra',
+    url: 'https://www.papytane.com/mp4/accrobra.mp4',
+  ),
+  VideoItem(
+    title: 'Airelles',
+    url: 'https://www.papytane.com/mp4/airelles.mp4',
+  ),
+  VideoItem(
+    title: 'Anni 18 ans',
+    url: 'https://www.papytane.com/mp4/anni18an.mp4',
+  ),
+  VideoItem(
+    title: 'Arnaudin',
+    url: 'https://www.papytane.com/mp4/arnaudin.mp4',
+  ),
+];
+
 class BetterPlayerDemo extends StatefulWidget {
   const BetterPlayerDemo({super.key});
 
@@ -26,23 +52,33 @@ class BetterPlayerDemo extends StatefulWidget {
 
 class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
   late final BetterPlayerController _controller;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    final dataSource = BetterPlayerDataSource(
-      BetterPlayerDataSourceType.network,
-      "https://res.cloudinary.com/dusmue7d9/video/upload/v1764146557/videos/snaptik_7565522420099026194_hd_nseiei.mp4",
-      // "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    );
     _controller = BetterPlayerController(
       const BetterPlayerConfiguration(
         autoPlay: true,
         looping: false,
         autoDetectFullscreenDeviceOrientation: true,
       ),
-      betterPlayerDataSource: dataSource,
+      betterPlayerDataSource: _buildDataSource(_videos[_selectedIndex].url),
     );
+  }
+
+  BetterPlayerDataSource _buildDataSource(String url) {
+    return BetterPlayerDataSource(
+      BetterPlayerDataSourceType.network,
+      url,
+    );
+  }
+
+  Future<void> _playVideo(int index) async {
+    if (index == _selectedIndex) return;
+    setState(() => _selectedIndex = index);
+    await _controller.setupDataSource(_buildDataSource(_videos[index].url));
+    _controller.play();
   }
 
   @override
@@ -54,12 +90,49 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Better Player Demo")),
-      body: Center(
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: BetterPlayer(controller: _controller),
-        ),
+      appBar: AppBar(title: const Text('Better Player Demo')),
+      body: Column(
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: BetterPlayer(controller: _controller),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView.separated(
+              itemCount: _videos.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final video = _videos[index];
+                final isSelected = index == _selectedIndex;
+                return ListTile(
+                  leading: Icon(
+                    isSelected
+                        ? Icons.play_circle_fill
+                        : Icons.play_circle_outline,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  title: Text(
+                    video.title,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  subtitle: Text(
+                    video.url,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  selected: isSelected,
+                  onTap: () => _playVideo(index),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

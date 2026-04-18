@@ -102,7 +102,7 @@ class _BetterPlayerSubtitlesDrawerState
     widget.betterPlayerController.renderedSubtitle = subtitle;
     final List<String> subtitles = subtitle?.texts ?? [];
     final List<Widget> textWidgets =
-        subtitles.map((text) => _buildSubtitleTextWidget(text)).toList();
+        subtitles.map(_buildSubtitleTextWidget).toList();
 
     return Container(
       height: double.infinity,

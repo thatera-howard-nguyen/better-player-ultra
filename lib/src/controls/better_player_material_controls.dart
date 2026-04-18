@@ -302,9 +302,7 @@ class _BetterPlayerMaterialControlsState
 
   Widget _buildMoreButton() {
     return BetterPlayerMaterialClickableWidget(
-      onTap: () {
-        onShowMoreClicked();
-      },
+      onTap: onShowMoreClicked,
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Icon(
@@ -564,9 +562,7 @@ class _BetterPlayerMaterialControlsState
     _betterPlayerController!.toggleFullScreen();
     _showAfterExpandCollapseTimer =
         Timer(_controlsConfiguration.controlsHideTime, () {
-      setState(() {
-        cancelAndRestartTimer();
-      });
+      setState(cancelAndRestartTimer);
     });
   }
 

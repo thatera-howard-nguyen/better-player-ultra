@@ -736,12 +736,28 @@ internal class BetterPlayer(
         disposeMediaSession()
         disposeRemoteNotifications()
         if (isInitialized) {
-            exoPlayer?.stop()
+            try {
+                exoPlayer?.stop()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to stop ExoPlayer on dispose", e)
+            }
         }
-        textureEntry.release()
+        try {
+            textureEntry.release()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to release texture entry on dispose", e)
+        }
         eventChannel.setStreamHandler(null)
-        surface?.release()
-        exoPlayer?.release()
+        try {
+            surface?.release()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to release surface on dispose", e)
+        }
+        try {
+            exoPlayer?.release()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to release ExoPlayer on dispose", e)
+        }
     }
 
     override fun equals(other: Any?): Boolean {

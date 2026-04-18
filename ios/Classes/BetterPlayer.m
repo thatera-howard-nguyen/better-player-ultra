@@ -756,4 +756,16 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     _disposed = true;
 }
 
+- (void)dealloc {
+    // Defensive cleanup: ensure KVO/notification observers are removed even
+    // if dispose was not invoked (e.g. abrupt teardown).
+    @try {
+        if (self._observersAdded) {
+            [self removeObservers];
+        }
+    } @catch (NSException *exception) {
+        NSLog(@"BetterPlayer dealloc removeObservers failed: %@", exception.debugDescription);
+    }
+}
+
 @end
