@@ -104,7 +104,9 @@ AVPictureInPictureController *_pipController;
         [[_player currentItem] removeObserver:self
                                    forKeyPath:@"playbackBufferFull"
                                       context:playbackBufferFullContext];
-        [[NSNotificationCenter defaultCenter] removeObserver:self];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:AVPlayerItemDidPlayToEndTimeNotification
+                                                      object:[_player currentItem]];
         self._observersAdded = false;
     }
 }
@@ -282,7 +284,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         [self play];
     } else {
         _stalledCount++;
-        if (_stalledCount > 60){
+        if (_stalledCount > 10){
             if (_eventSink != nil) {
                 _eventSink([FlutterError
                         errorWithCode:@"VideoError"
@@ -739,11 +741,31 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)dispose {
     [self pause];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(startStalledCheck) object:nil];
+    _loaderDelegate = nil;
     [self disposeSansEventChannel];
     [_eventChannel setStreamHandler:nil];
     [self disablePictureInPicture];
     [self setPictureInPicture:false];
+    if (@available(iOS 9.0, *)) {
+        if (_pipController.delegate == self) {
+            _pipController.delegate = nil;
+            _pipController = nil;
+        }
+    }
     _disposed = true;
+}
+
+- (void)dealloc {
+    // Defensive cleanup: ensure KVO/notification observers are removed even
+    // if dispose was not invoked (e.g. abrupt teardown).
+    @try {
+        if (self._observersAdded) {
+            [self removeObservers];
+        }
+    } @catch (NSException *exception) {
+        NSLog(@"BetterPlayer dealloc removeObservers failed: %@", exception.debugDescription);
+    }
 }
 
 @end

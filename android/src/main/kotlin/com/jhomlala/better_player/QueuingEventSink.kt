@@ -10,32 +10,41 @@ import java.util.ArrayList
  * And implementation of [EventSink] which can wrap an underlying sink.
  * It delivers messages immediately when downstream is available, but it queues messages before
  * the delegate event sink is set with setDelegate.
- * This class is not thread-safe. All calls must be done on the same thread or synchronized
- * externally.
+ * Thread-safe: all operations are synchronized.
  */
 internal class QueuingEventSink : EventSink {
     private var delegate: EventSink? = null
     private val eventQueue = ArrayList<Any>()
     private var done = false
+    private val lock = Any()
+
     fun setDelegate(delegate: EventSink?) {
-        this.delegate = delegate
-        maybeFlush()
+        synchronized(lock) {
+            this.delegate = delegate
+            maybeFlush()
+        }
     }
 
     override fun endOfStream() {
-        enqueue(EndOfStreamEvent())
-        maybeFlush()
-        done = true
+        synchronized(lock) {
+            enqueue(EndOfStreamEvent())
+            maybeFlush()
+            done = true
+        }
     }
 
     override fun error(code: String, message: String, details: Any) {
-        enqueue(ErrorEvent(code, message, details))
-        maybeFlush()
+        synchronized(lock) {
+            enqueue(ErrorEvent(code, message, details))
+            maybeFlush()
+        }
     }
 
     override fun success(event: Any) {
-        enqueue(event)
-        maybeFlush()
+        synchronized(lock) {
+            enqueue(event)
+            maybeFlush()
+        }
     }
 
     private fun enqueue(event: Any) {

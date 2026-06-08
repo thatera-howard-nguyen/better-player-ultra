@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:better_player/better_player.dart';
 import 'package:better_player/src/configuration/better_player_controller_event.dart';
-import 'package:better_player/src/core/better_player_ambient.dart';
 import 'package:better_player/src/core/better_player_utils.dart';
 import 'package:better_player/src/core/better_player_with_controls.dart';
 import 'package:flutter/material.dart';
@@ -70,6 +69,9 @@ class _BetterPlayerState extends State<BetterPlayer>
   ///Flag to track if fullscreen was triggered by manual control
   bool _fullscreenTriggeredByManual = false;
 
+  ///Listener for orientation constraints setup
+  VoidCallback? _orientationListener;
+
   @override
   void initState() {
     super.initState();
@@ -119,7 +121,7 @@ class _BetterPlayerState extends State<BetterPlayer>
   ///Set up orientation constraints based on video aspect ratio
   void _setupOrientationConstraints() {
     // Listen for video initialization to set orientation constraints
-    widget.controller.videoPlayerController?.addListener(() {
+    _orientationListener = () {
       if (!mounted) {
         return;
       }
@@ -136,7 +138,8 @@ class _BetterPlayerState extends State<BetterPlayer>
       } else {
         _setupLandscapeVideoOrientationConstraints();
       }
-    });
+    };
+    widget.controller.videoPlayerController?.addListener(_orientationListener!);
   }
 
   ///Setup orientation constraints for portrait videos
@@ -184,6 +187,11 @@ class _BetterPlayerState extends State<BetterPlayer>
     }
 
     WidgetsBinding.instance.removeObserver(this);
+    if (_orientationListener != null) {
+      widget.controller.videoPlayerController
+          ?.removeListener(_orientationListener!);
+      _orientationListener = null;
+    }
     _controllerEventSubscription?.cancel();
     widget.controller.dispose();
     VisibilityDetectorController.instance
@@ -220,7 +228,7 @@ class _BetterPlayerState extends State<BetterPlayer>
         onFullScreenChanged();
         break;
       default:
-        setState(() {});
+        // No rebuild needed for other events (play, pause, etc.)
         break;
     }
   }

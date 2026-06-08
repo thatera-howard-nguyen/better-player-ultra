@@ -99,15 +99,11 @@ class BetterPlayerPlaylistController {
   ///Setup data source with index based on [_betterPlayerDataSourceList] provided
   ///in constructor. Index must
   void setupDataSource(int index) {
-    assert(
-        index >= 0 && index < _betterPlayerDataSourceList.length,
-        "Index must be greater than 0 and less than size of data source "
-        "list - 1");
-    if (index <= _dataSourceLength) {
-      _currentDataSourceIndex = index;
-      _betterPlayerController!
-          .setupDataSource(_betterPlayerDataSourceList[index]);
-    }
+    assert(index >= 0 && index < _betterPlayerDataSourceList.length,
+        "Index must be >= 0 and < data source list size");
+    _currentDataSourceIndex = index;
+    _betterPlayerController!
+        .setupDataSource(_betterPlayerDataSourceList[index]);
   }
 
   ///Get index of next data source. If current index is less than

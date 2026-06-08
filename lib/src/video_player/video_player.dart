@@ -420,9 +420,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _eventSubscription?.cancel();
       await _videoPlayerPlatform.dispose(_textureId);
       videoEventStreamController.close();
+      super.dispose();
     }
-    _isDisposed = true;
-    super.dispose();
   }
 
   /// Starts playing the video.

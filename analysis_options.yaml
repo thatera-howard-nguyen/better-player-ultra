@@ -7,6 +7,12 @@ analyzer:
 linter:
   rules:
     close_sinks: true
+    cancel_subscriptions: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    unnecessary_lambdas: true
+    avoid_dynamic_calls: true
     sort_constructors_first: false
     avoid_classes_with_only_static_members: false
     avoid_void_async: false

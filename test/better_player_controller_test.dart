@@ -409,7 +409,7 @@ void main() {
       test("isLiveStream returns valid value", () async {
         final BetterPlayerController betterPlayerMockController =
             BetterPlayerTestUtils.setupBetterPlayerMockController();
-        expect(() => betterPlayerMockController.isLiveStream(),
+        expect(betterPlayerMockController.isLiveStream,
             throwsA(isA<StateError>()));
         betterPlayerMockController.setupDataSource(BetterPlayerDataSource(
             BetterPlayerDataSourceType.network,
@@ -425,7 +425,7 @@ void main() {
       test("isVideoInitialized returns valid value", () async {
         final BetterPlayerController betterPlayerMockController =
             BetterPlayerTestUtils.setupBetterPlayerMockController();
-        expect(() => betterPlayerMockController.isVideoInitialized(),
+        expect(betterPlayerMockController.isVideoInitialized,
             throwsA(isA<StateError>()));
         final videoPlayerController =
             BetterPlayerTestUtils.setupMockVideoPlayerController();
@@ -446,6 +446,51 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 3000), () {});
         expect(eventCount, 3);
       });
+
+      test(
+        "dispose closes nextVideoTimeStream (no late events)",
+        () async {
+          final BetterPlayerController betterPlayerMockController =
+              BetterPlayerTestUtils.setupBetterPlayerMockController();
+          var doneCalled = false;
+          betterPlayerMockController.nextVideoTimeStream
+              .listen((_) {}, onDone: () => doneCalled = true);
+          await betterPlayerMockController.dispose(forceDispose: true);
+          // Give the stream controller a tick to notify listeners.
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          expect(doneCalled, true);
+        },
+      );
+
+      test(
+        "betterPlayerAsmsTracks getter returns an unmodifiable view",
+        () {
+          final BetterPlayerController betterPlayerMockController =
+              BetterPlayerTestUtils.setupBetterPlayerMockController();
+          final tracks = betterPlayerMockController.betterPlayerAsmsTracks;
+          expect(
+            () => tracks.add(BetterPlayerAsmsTrack.defaultTrack()),
+            throwsUnsupportedError,
+          );
+        },
+      );
+
+      test(
+        "betterPlayerSubtitlesSourceList getter returns an unmodifiable view",
+        () {
+          final BetterPlayerController betterPlayerMockController =
+              BetterPlayerTestUtils.setupBetterPlayerMockController();
+          final sources =
+              betterPlayerMockController.betterPlayerSubtitlesSourceList;
+          expect(
+            () => sources.add(
+              BetterPlayerSubtitlesSource(
+                  type: BetterPlayerSubtitlesSourceType.memory),
+            ),
+            throwsUnsupportedError,
+          );
+        },
+      );
     },
   );
 }

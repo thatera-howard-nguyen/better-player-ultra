@@ -124,10 +124,12 @@ class _VideoProgressBarState
         height: MediaQuery.of(context).size.height / 2,
         width: MediaQuery.of(context).size.width,
         color: Colors.transparent,
-        child: CustomPaint(
-          painter: _ProgressBarPainter(
-            _getValue(),
-            widget.colors,
+        child: RepaintBoundary(
+          child: CustomPaint(
+            painter: _ProgressBarPainter(
+              _getValue(),
+              widget.colors,
+            ),
           ),
         ),
       ),
@@ -189,8 +191,13 @@ class _ProgressBarPainter extends CustomPainter {
   BetterPlayerProgressColors colors;
 
   @override
-  bool shouldRepaint(CustomPainter painter) {
-    return true;
+  bool shouldRepaint(covariant _ProgressBarPainter oldDelegate) {
+    final oldValue = oldDelegate.value;
+    return oldValue.position != value.position ||
+        oldValue.duration != value.duration ||
+        oldValue.buffered != value.buffered ||
+        oldValue.initialized != value.initialized ||
+        oldDelegate.colors != colors;
   }
 
   @override
