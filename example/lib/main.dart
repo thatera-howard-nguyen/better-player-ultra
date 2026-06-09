@@ -52,7 +52,7 @@ class BetterPlayerDemo extends StatefulWidget {
 
 class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
   late final BetterPlayerController _controller;
-  // PiP (iOS) cần GlobalKey gắn vào widget BetterPlayer để định vị render box.
+  // iOS PiP requires a GlobalKey on the BetterPlayer widget to locate its render box.
   final GlobalKey _betterPlayerKey = GlobalKey();
   int _selectedIndex = 0;
 
@@ -66,13 +66,13 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
         autoDetectFullscreenDeviceOrientation: true,
         controlsConfiguration: BetterPlayerControlsConfiguration(
           playerTheme: BetterPlayerTheme.material,
-          // Hiện nút Picture-in-Picture trong menu overflow của controls.
+          // Show the Picture-in-Picture button in the controls overflow menu.
           enablePip: true,
         ),
       ),
       betterPlayerDataSource: _buildDataSource(_videos[_selectedIndex].url),
     );
-    // Cho controller biết GlobalKey để nút PiP trong controls hoạt động.
+    // Register the GlobalKey so the PiP button in the controls layer can resolve the render box.
     _controller.setBetterPlayerGlobalKey(_betterPlayerKey);
   }
 
@@ -95,7 +95,7 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
     if (!isSupported) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Picture in Picture không khả dụng')),
+        const SnackBar(content: Text('Picture in Picture is not available')),
       );
       return;
     }
