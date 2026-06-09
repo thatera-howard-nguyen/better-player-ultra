@@ -39,6 +39,9 @@ AVPictureInPictureController *_pipController;
 - (nonnull UIView *)view {
     BetterPlayerView *playerView = [[BetterPlayerView alloc] initWithFrame:CGRectZero];
     playerView.player = _player;
+    // Keep a reference so we can re-bind the player to this view's AVPlayerLayer
+    // after PiP ends (see -disablePictureInPicture).
+    self.playerView = playerView;
     return playerView;
 }
 
@@ -632,19 +635,32 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)usePlayerLayer: (CGRect) frame
 {
-    if( _player )
-    {
-        // Create new controller passing reference to the AVPlayerLayer
-        self._playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-        UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-        self._playerLayer.frame = frame;
-        self._playerLayer.needsDisplayOnBoundsChange = YES;
-        //  [self._playerLayer addObserver:self forKeyPath:readyForDisplayKeyPath options:NSKeyValueObservingOptionNew context:nil];
-        [vc.view.layer addSublayer:self._playerLayer];
-        vc.view.layer.needsDisplayOnBoundsChange = YES;
-        if (@available(iOS 9.0, *)) {
+    if (_player == nil) {
+        return;
+    }
+    // Drive PiP from the platform view's OWN AVPlayerLayer (the layer that
+    // renders the video inline) instead of creating a second AVPlayerLayer and
+    // overlaying it on the FlutterViewController's root view. The old
+    // second-layer approach had two fatal problems on return from PiP:
+    //   1. The overlay layer sat on top of the whole Flutter surface, hiding the
+    //      controls (tapping the player did nothing visible), and it was not
+    //      reliably removed.
+    //   2. Two AVPlayerLayers sharing one AVPlayer caused a rendering handoff;
+    //      when the PiP layer went away the inline layer stayed frozen.
+    // Using the existing inline layer means PiP returns to the same layer that
+    // is already on screen — no overlay, no handoff.
+    BetterPlayerView* playerView = self.playerView;
+    if (playerView == nil) {
+        NSLog(@"BetterPlayer: cannot start PiP, platform view is not available yet.");
+        return;
+    }
+    if (@available(iOS 9.0, *)) {
+        // Recreate the controller against the current inline layer each cycle.
+        if (_pipController) {
+            _pipController.delegate = nil;
             _pipController = NULL;
         }
+        self._playerLayer = playerView.playerLayer;
         [self setupPipController];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
@@ -655,10 +671,36 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)disablePictureInPicture
 {
-    [self setPictureInPicture:true];
+    [self setPictureInPicture:false];
+    if (@available(iOS 9.0, *)) {
+        if (_pipController) {
+            _pipController.delegate = nil;
+            _pipController = NULL;
+        }
+    }
     if (__playerLayer){
-        [self._playerLayer removeFromSuperlayer];
+        // NOTE: _playerLayer now aliases the platform view's OWN backing layer
+        // (set in -usePlayerLayer:). It is owned by the Flutter platform view
+        // and stays on screen, so we must NOT removeFromSuperlayer here — doing
+        // so would tear the video view out of the Flutter hierarchy. Just drop
+        // our reference; the inline layer keeps rendering as before.
         self._playerLayer = nil;
+
+        // Even though PiP used this same inline layer, AVKit can leave it
+        // without an active render binding on return, so the video area stays
+        // frozen. Re-bind the player to force it to render again. Must run on
+        // the main thread.
+        BetterPlayerView* playerView = self.playerView;
+        if (playerView != nil) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (self->_disposed) {
+                    return;
+                }
+                playerView.playerLayer.player = nil;
+                playerView.playerLayer.player = self->_player;
+            });
+        }
+
         if (_eventSink != nil) {
             _eventSink(@{@"event" : @"pipStop"});
         }
@@ -686,11 +728,21 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController failedToStartPictureInPictureWithError:(NSError *)error {
-
+    // PiP never started; tear down our controller/layer reference so a later
+    // attempt recreates it cleanly.
+    [self disablePictureInPicture];
 }
 
 - (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
-    [self setRestoreUserInterfaceForPIPStopCompletionHandler: true];
+    // The Flutter view hierarchy is never torn down while PiP runs, so the UI
+    // is already on screen — store and immediately signal completion. The
+    // previous code dropped this handler (it only poked a global block that was
+    // always NULL), so iOS never finished the PiP-stop transition:
+    // -pictureInPictureControllerDidStopPictureInPicture: didn't run, the PiP
+    // AVPlayerLayer stayed on top of the player view leaving the video area
+    // frozen/unresponsive, and the uncalled handler could crash on teardown.
+    _restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
+    [self setRestoreUserInterfaceForPIPStopCompletionHandler: YES];
 }
 
 - (void) setAudioTrack:(NSString*) name index:(int) index{

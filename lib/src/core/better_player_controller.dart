@@ -806,10 +806,16 @@ class BetterPlayerController {
 
   ///Enable/disable controls (when enabled = false, controls will be always hidden)
   void setControlsEnabled(bool enabled) {
-    if (!enabled) {
-      _controlsVisibilityStreamController.add(false);
-    }
     _controlsEnabled = enabled;
+    // Notify the controls widget on BOTH transitions. Previously only the
+    // disable path pushed to the visibility stream; when controls were
+    // re-enabled (e.g. after returning from Picture-in-Picture) nothing told
+    // the controls widget to rebuild, so it stayed collapsed to a SizedBox()
+    // with no gesture detector and tapping the player did nothing. The player
+    // value listener (_updateState) is also gated out while controls are
+    // hidden, so it never self-heals. Pushing here forces the rebuild; we keep
+    // controls hidden (false) so they still appear only on tap, as before.
+    _controlsVisibilityStreamController.add(false);
   }
 
   ///Internal method, used to trigger CONTROLS_VISIBLE or CONTROLS_HIDDEN event

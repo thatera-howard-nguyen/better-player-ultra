@@ -674,6 +674,19 @@ class _VideoPlayerState extends State<VideoPlayer> {
   _VideoPlayerState() {
     _listener = () {
       final int? newTextureId = widget.controller!.textureId;
+      final bool isPip = widget.controller!.value.isPip;
+      // On iOS the UiKitView platform view is left frozen/unresponsive after
+      // the app returns from a Picture-in-Picture session (the layer stops
+      // repainting and the region stops forwarding touches to the Flutter
+      // controls). Recreating the platform view restores it. Detect the
+      // pipStart -> pipStop transition and bump the view key so the UiKitView
+      // is rebuilt fresh.
+      if (_wasPip && !isPip) {
+        setState(() {
+          _viewGeneration++;
+        });
+      }
+      _wasPip = isPip;
       if (newTextureId != _textureId) {
         setState(() {
           _textureId = newTextureId;
@@ -684,6 +697,8 @@ class _VideoPlayerState extends State<VideoPlayer> {
 
   late VoidCallback _listener;
   int? _textureId;
+  bool _wasPip = false;
+  int _viewGeneration = 0;
 
   @override
   void initState() {
@@ -710,9 +725,16 @@ class _VideoPlayerState extends State<VideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return _textureId == null
-        ? Container()
-        : _videoPlayerPlatform.buildView(_textureId);
+    if (_textureId == null) {
+      return Container();
+    }
+    // The key includes _viewGeneration so that recreating it (after PiP) forces
+    // Flutter to tear down and rebuild the underlying platform view.
+    return KeyedSubtree(
+      key:
+          ValueKey<String>('better_player_view_${_textureId}_$_viewGeneration'),
+      child: _videoPlayerPlatform.buildView(_textureId),
+    );
   }
 }
 

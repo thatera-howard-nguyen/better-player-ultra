@@ -65,6 +65,7 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
         looping: false,
         autoDetectFullscreenDeviceOrientation: true,
         controlsConfiguration: BetterPlayerControlsConfiguration(
+          playerTheme: BetterPlayerTheme.material,
           // Hiện nút Picture-in-Picture trong menu overflow của controls.
           enablePip: true,
         ),
