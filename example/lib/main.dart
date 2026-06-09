@@ -52,6 +52,8 @@ class BetterPlayerDemo extends StatefulWidget {
 
 class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
   late final BetterPlayerController _controller;
+  // PiP (iOS) cần GlobalKey gắn vào widget BetterPlayer để định vị render box.
+  final GlobalKey _betterPlayerKey = GlobalKey();
   int _selectedIndex = 0;
 
   @override
@@ -62,9 +64,15 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
         autoPlay: true,
         looping: false,
         autoDetectFullscreenDeviceOrientation: true,
+        controlsConfiguration: BetterPlayerControlsConfiguration(
+          // Hiện nút Picture-in-Picture trong menu overflow của controls.
+          enablePip: true,
+        ),
       ),
       betterPlayerDataSource: _buildDataSource(_videos[_selectedIndex].url),
     );
+    // Cho controller biết GlobalKey để nút PiP trong controls hoạt động.
+    _controller.setBetterPlayerGlobalKey(_betterPlayerKey);
   }
 
   BetterPlayerDataSource _buildDataSource(String url) {
@@ -81,6 +89,18 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
     _controller.play();
   }
 
+  Future<void> _enterPip() async {
+    final isSupported = await _controller.isPictureInPictureSupported();
+    if (!isSupported) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Picture in Picture không khả dụng')),
+      );
+      return;
+    }
+    await _controller.enablePictureInPicture(_betterPlayerKey);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -95,7 +115,18 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: BetterPlayer(controller: _controller),
+            child: BetterPlayer(
+              key: _betterPlayerKey,
+              controller: _controller,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _enterPip,
+              icon: const Icon(Icons.picture_in_picture_alt),
+              label: const Text('Picture in Picture'),
+            ),
           ),
           const Divider(height: 1),
           Expanded(
