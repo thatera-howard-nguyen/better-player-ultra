@@ -1088,8 +1088,15 @@ class BetterPlayerController {
   ///state, then video playback will stop. If showNotification is set in data
   ///source or handleLifecycle is false then this logic will be ignored.
   void setAppLifecycleState(AppLifecycleState appLifecycleState) {
+    _appLifecycleState = appLifecycleState;
+    // While Picture in Picture is active the video must keep playing after the
+    // app is backgrounded (the OS keeps the PiP window alive). Pausing here
+    // would stop the PiP playback and force the user to resume manually, so the
+    // automatic lifecycle pause/resume is skipped entirely in PiP mode. (iOS)
+    if (videoPlayerController?.value.isPip == true || _wasInPipMode) {
+      return;
+    }
     if (_isAutomaticPlayPauseHandled()) {
-      _appLifecycleState = appLifecycleState;
       if (appLifecycleState == AppLifecycleState.resumed) {
         if (_wasPlayingBeforePause == true && _isPlayerVisible) {
           play();
