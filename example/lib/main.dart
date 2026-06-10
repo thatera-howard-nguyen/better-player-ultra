@@ -60,11 +60,12 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
   void initState() {
     super.initState();
     _controller = BetterPlayerController(
-      const BetterPlayerConfiguration(
+      BetterPlayerConfiguration(
         autoPlay: true,
         looping: false,
         autoDetectFullscreenDeviceOrientation: true,
         controlsConfiguration: BetterPlayerControlsConfiguration(
+          controlBarColor: Colors.black.withValues(alpha: 0.2),
           playerTheme: BetterPlayerTheme.material,
           // Show the Picture-in-Picture button in the controls overflow menu.
           enablePip: true,

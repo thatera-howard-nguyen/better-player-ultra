@@ -402,8 +402,17 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
 
     private fun isPictureInPictureSupported(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null && activity!!.packageManager
-            .hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || activity == null) return false
+        if (!activity!!.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return false
+        return try {
+            val flagField = android.content.pm.ActivityInfo::class.java
+                .getDeclaredField("FLAG_SUPPORTS_PICTURE_IN_PICTURE")
+            val flag = flagField.getInt(null)
+            val info = activity!!.packageManager.getActivityInfo(activity!!.componentName, 0)
+            (info.flags and flag) != 0
+        } catch (e: Exception) {
+            true
+        }
     }
 
     private fun enablePictureInPicture(player: BetterPlayer) {
