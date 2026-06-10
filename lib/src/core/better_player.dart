@@ -69,6 +69,10 @@ class _BetterPlayerState extends State<BetterPlayer>
   ///Flag to track if fullscreen was triggered by manual control
   bool _fullscreenTriggeredByManual = false;
 
+  ///True while a PiP-triggered fullscreen route is on the navigation stack.
+  ///Orientation changes are skipped for push and pop of this route.
+  bool _isFullscreenForPip = false;
+
   ///Listener for orientation constraints setup
   VoidCallback? _orientationListener;
 
@@ -218,6 +222,13 @@ class _BetterPlayerState extends State<BetterPlayer>
           // Handle manual fullscreen with YouTube-like behavior
           _handleManualFullscreen();
         }
+        onFullScreenChanged();
+        break;
+      case BetterPlayerControllerEvent.openFullscreenForPip:
+        // Push fullscreen route to hide AppBar in the PiP window,
+        // but skip orientation change to avoid rotation flicker.
+        _isFullscreenForPip = true;
+        _fullscreenTriggeredByManual = true;
         onFullScreenChanged();
         break;
       case BetterPlayerControllerEvent.hideFullscreen:
@@ -374,10 +385,14 @@ class _BetterPlayerState extends State<BetterPlayer>
       _isFullScreen = false;
       controller
           .postEvent(BetterPlayerEvent(BetterPlayerEventType.hideFullscreen));
-      // Ensure device orientations are restored on any non-route exit path
-      final after =
-          _betterPlayerConfiguration.deviceOrientationsAfterFullScreen;
-      SystemChrome.setPreferredOrientations(after);
+      // Skip orientation restore when exiting a PiP-triggered fullscreen —
+      // _pushFullScreenWidget will also run its cleanup but orientation must
+      // not be changed to avoid the rotation flicker on PiP exit.
+      if (!_isFullscreenForPip) {
+        final after =
+            _betterPlayerConfiguration.deviceOrientationsAfterFullScreen;
+        SystemChrome.setPreferredOrientations(after);
+      }
     }
 
     // Reset flags after fullscreen change is complete
@@ -452,33 +467,34 @@ class _BetterPlayerState extends State<BetterPlayer>
 
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    // If fullscreen is triggered manually, don't let auto/config override the
-    // forced orientation we just applied in _handleManualFullscreen.
-    // Otherwise, apply auto-detect or configured orientations.
-    if (!_fullscreenTriggeredByManual) {
-      if (_betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation ==
-          true) {
-        final aspectRatio =
-            widget.controller.videoPlayerController?.value.aspectRatio ?? 1.0;
+    // Skip orientation changes for PiP-triggered fullscreen to avoid flicker.
+    // For normal fullscreen: apply manual or auto-detected orientation.
+    if (!_isFullscreenForPip) {
+      if (!_fullscreenTriggeredByManual) {
+        if (_betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation ==
+            true) {
+          final aspectRatio =
+              widget.controller.videoPlayerController?.value.aspectRatio ?? 1.0;
 
-        List<DeviceOrientation> deviceOrientations;
-        if (_isPortraitVideo(aspectRatio)) {
-          deviceOrientations = _getPortraitVideoFullscreenOrientations();
+          List<DeviceOrientation> deviceOrientations;
+          if (_isPortraitVideo(aspectRatio)) {
+            deviceOrientations = _getPortraitVideoFullscreenOrientations();
+          } else {
+            deviceOrientations = _getLandscapeVideoFullscreenOrientations();
+          }
+          await SystemChrome.setPreferredOrientations(
+            deviceOrientations
+                .where((o) => o != DeviceOrientation.portraitDown)
+                .toList(),
+          );
         } else {
-          deviceOrientations = _getLandscapeVideoFullscreenOrientations();
+          await SystemChrome.setPreferredOrientations(
+            widget.controller.betterPlayerConfiguration
+                .deviceOrientationsOnFullScreen
+                .where((o) => o != DeviceOrientation.portraitDown)
+                .toList(),
+          );
         }
-        await SystemChrome.setPreferredOrientations(
-          deviceOrientations
-              .where((o) => o != DeviceOrientation.portraitDown)
-              .toList(),
-        );
-      } else {
-        await SystemChrome.setPreferredOrientations(
-          widget.controller.betterPlayerConfiguration
-              .deviceOrientationsOnFullScreen
-              .where((o) => o != DeviceOrientation.portraitDown)
-              .toList(),
-        );
       }
     }
 
@@ -496,10 +512,17 @@ class _BetterPlayerState extends State<BetterPlayer>
 
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: _betterPlayerConfiguration.systemOverlaysAfterFullScreen);
-    await SystemChrome.setPreferredOrientations(_betterPlayerConfiguration
-        .deviceOrientationsAfterFullScreen
-        .where((o) => o != DeviceOrientation.portraitDown)
-        .toList());
+
+    // Skip orientation restore for PiP-triggered fullscreen; reset the flag here
+    // since this is the last cleanup step for that route.
+    if (_isFullscreenForPip) {
+      _isFullscreenForPip = false;
+    } else {
+      await SystemChrome.setPreferredOrientations(_betterPlayerConfiguration
+          .deviceOrientationsAfterFullScreen
+          .where((o) => o != DeviceOrientation.portraitDown)
+          .toList());
+    }
   }
 
   Widget _buildPlayer() {
