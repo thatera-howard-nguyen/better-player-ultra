@@ -3,10 +3,17 @@
 // found in the LICENSE file.
 package com.jhomlala.better_player
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.PendingIntent
 import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -39,6 +46,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+    private var pipActionsReceiver: BroadcastReceiver? = null
+    private var pipPlayer: BetterPlayer? = null
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
         flutterState = FlutterState(
@@ -418,7 +427,9 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private fun enablePictureInPicture(player: BetterPlayer) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             player.setupMediaSession(flutterState!!.applicationContext)
-            activity!!.enterPictureInPictureMode(PictureInPictureParams.Builder().build())
+            pipPlayer = player
+            registerPipActionsReceiver()
+            activity!!.enterPictureInPictureMode(buildPipParams(player))
             startPictureInPictureListenerTimer(player)
             player.onPictureInPictureStatusChanged(true)
         }
@@ -426,9 +437,97 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     private fun disablePictureInPicture(player: BetterPlayer) {
         stopPipHandler()
+        unregisterPipActionsReceiver()
         activity!!.moveTaskToBack(false)
         player.onPictureInPictureStatusChanged(false)
         player.disposeMediaSession()
+    }
+
+    @SuppressLint("NewApi")
+    private fun buildPipParams(player: BetterPlayer): PictureInPictureParams {
+        return PictureInPictureParams.Builder()
+            .setActions(buildPipActions(player.isPlaying()))
+            .build()
+    }
+
+    @SuppressLint("NewApi")
+    private fun buildPipActions(isPlaying: Boolean): List<RemoteAction> {
+        val context = flutterState!!.applicationContext
+        val actions = mutableListOf<RemoteAction>()
+
+        val prevIntent = PendingIntent.getBroadcast(
+            context, 0,
+            Intent(ACTION_PIP_SKIP_PREV).setPackage(context.packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        actions.add(RemoteAction(
+            Icon.createWithResource(context, android.R.drawable.ic_media_rew),
+            "Rewind", "Skip backward 10s",
+            prevIntent
+        ))
+
+        val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+        val playPauseTitle = if (isPlaying) "Pause" else "Play"
+        val playPauseIntent = PendingIntent.getBroadcast(
+            context, 1,
+            Intent(ACTION_PIP_PLAY_PAUSE).setPackage(context.packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        actions.add(RemoteAction(
+            Icon.createWithResource(context, playPauseIcon),
+            playPauseTitle, playPauseTitle,
+            playPauseIntent
+        ))
+
+        val nextIntent = PendingIntent.getBroadcast(
+            context, 2,
+            Intent(ACTION_PIP_SKIP_NEXT).setPackage(context.packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        actions.add(RemoteAction(
+            Icon.createWithResource(context, android.R.drawable.ic_media_ff),
+            "Fast forward", "Skip forward 10s",
+            nextIntent
+        ))
+
+        return actions
+    }
+
+    private fun registerPipActionsReceiver() {
+        if (pipActionsReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val player = pipPlayer ?: return
+                when (intent?.action) {
+                    ACTION_PIP_PLAY_PAUSE -> {
+                        if (player.isPlaying()) player.pause() else player.play()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            activity?.setPictureInPictureParams(buildPipParams(player))
+                        }
+                    }
+                    ACTION_PIP_SKIP_NEXT -> player.seekForward(PIP_SKIP_MS)
+                    ACTION_PIP_SKIP_PREV -> player.seekBackward(PIP_SKIP_MS)
+                }
+            }
+        }
+        val filter = IntentFilter().apply {
+            addAction(ACTION_PIP_PLAY_PAUSE)
+            addAction(ACTION_PIP_SKIP_NEXT)
+            addAction(ACTION_PIP_SKIP_PREV)
+        }
+        activity?.registerReceiver(receiver, filter)
+        pipActionsReceiver = receiver
+    }
+
+    private fun unregisterPipActionsReceiver() {
+        pipActionsReceiver?.let {
+            try {
+                activity?.unregisterReceiver(it)
+            } catch (_: Exception) {
+            }
+            pipActionsReceiver = null
+        }
+        pipPlayer = null
     }
 
     private fun startPictureInPictureListenerTimer(player: BetterPlayer) {
@@ -440,6 +539,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 } else {
                     player.onPictureInPictureStatusChanged(false)
                     player.disposeMediaSession()
+                    unregisterPipActionsReceiver()
                     stopPipHandler()
                 }
             }
@@ -554,5 +654,9 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val DISPOSE_METHOD = "dispose"
         private const val PRE_CACHE_METHOD = "preCache"
         private const val STOP_PRE_CACHE_METHOD = "stopPreCache"
+        private const val ACTION_PIP_PLAY_PAUSE = "com.jhomlala.better_player.PIP_PLAY_PAUSE"
+        private const val ACTION_PIP_SKIP_NEXT = "com.jhomlala.better_player.PIP_SKIP_NEXT"
+        private const val ACTION_PIP_SKIP_PREV = "com.jhomlala.better_player.PIP_SKIP_PREV"
+        private const val PIP_SKIP_MS = 10_000
     }
 }
