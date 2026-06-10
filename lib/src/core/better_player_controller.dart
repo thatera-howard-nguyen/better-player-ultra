@@ -669,13 +669,6 @@ class BetterPlayerController {
     _postControllerEvent(BetterPlayerControllerEvent.openFullscreen);
   }
 
-  ///Enters fullscreen for PiP: pushes the fullscreen route to hide the AppBar
-  ///but skips orientation changes to avoid the rotation flicker on PiP exit.
-  void enterFullScreenForPip() {
-    _isFullScreen = true;
-    _postControllerEvent(BetterPlayerControllerEvent.openFullscreenForPip);
-  }
-
   ///Disables full screen mode in player. This will trigger route change.
   void exitFullScreen() {
     _isFullScreen = false;
@@ -874,12 +867,7 @@ class BetterPlayerController {
     } else if (_wasInPipMode) {
       _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStop));
       _wasInPipMode = false;
-      if (_wasInFullScreenBeforePiP) {
-        // Stay in fullscreen — user was already fullscreen before PiP.
-      } else {
-        // Pop the fullscreen route that was pushed when entering PiP.
-        // On Android the widget will skip orientation changes (tracked by
-        // _isFullscreenForPip) so there is no rotation flicker on exit.
+      if (!_wasInFullScreenBeforePiP) {
         exitFullScreen();
       }
       if (_wasControlsEnabledBeforePiP) {
@@ -1172,11 +1160,7 @@ class BetterPlayerController {
         _wasInFullScreenBeforePiP = _isFullScreen;
         await videoPlayerController?.enablePictureInPicture(
             left: 0, top: 0, width: 0, height: 0);
-        if (!_wasInFullScreenBeforePiP) {
-          // Push fullscreen route to hide AppBar in the PiP window,
-          // but WITHOUT orientation change (handled by openFullscreenForPip).
-          enterFullScreenForPip();
-        }
+        enterFullScreen();
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
         return;
       }

@@ -6,9 +6,6 @@ enum BetterPlayerControllerEvent {
   ///Fullscreen mode has ended.
   hideFullscreen,
 
-  ///Fullscreen mode has started for Picture-in-Picture (no orientation change).
-  openFullscreenForPip,
-
   ///Subtitles changed.
   changeSubtitles,
 
