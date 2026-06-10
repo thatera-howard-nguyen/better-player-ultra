@@ -1269,6 +1269,12 @@ class BetterPlayerController {
       case VideoEventType.bufferingEnd:
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.bufferingEnd));
         break;
+      case VideoEventType.pipNext:
+        _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipNext));
+        break;
+      case VideoEventType.pipPrevious:
+        _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipPrevious));
+        break;
       default:
         BetterPlayerUtils.log("Unhandled event type: ${event.eventType}");
         break;

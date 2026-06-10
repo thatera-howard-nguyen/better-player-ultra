@@ -656,6 +656,18 @@ internal class BetterPlayer(
         eventSink.success(event)
     }
 
+    fun onPipNextVideo() {
+        val event: MutableMap<String, Any> = HashMap()
+        event["event"] = "pipNext"
+        eventSink.success(event)
+    }
+
+    fun onPipPreviousVideo() {
+        val event: MutableMap<String, Any> = HashMap()
+        event["event"] = "pipPrevious"
+        eventSink.success(event)
+    }
+
     fun disposeMediaSession() {
         if (mediaSession != null) {
             mediaSession?.release()

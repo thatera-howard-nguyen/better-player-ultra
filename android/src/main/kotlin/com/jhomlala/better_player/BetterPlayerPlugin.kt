@@ -461,8 +461,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         actions.add(RemoteAction(
-            Icon.createWithResource(context, android.R.drawable.ic_media_rew),
-            "Rewind", "Skip backward 10s",
+            Icon.createWithResource(context, android.R.drawable.ic_media_previous),
+            "Previous", "Previous video",
             prevIntent
         ))
 
@@ -485,8 +485,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         actions.add(RemoteAction(
-            Icon.createWithResource(context, android.R.drawable.ic_media_ff),
-            "Fast forward", "Skip forward 10s",
+            Icon.createWithResource(context, android.R.drawable.ic_media_next),
+            "Next", "Next video",
             nextIntent
         ))
 
@@ -505,8 +505,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                             activity?.setPictureInPictureParams(buildPipParams(player))
                         }
                     }
-                    ACTION_PIP_SKIP_NEXT -> player.seekForward(PIP_SKIP_MS)
-                    ACTION_PIP_SKIP_PREV -> player.seekBackward(PIP_SKIP_MS)
+                    ACTION_PIP_SKIP_NEXT -> player.onPipNextVideo()
+                    ACTION_PIP_SKIP_PREV -> player.onPipPreviousVideo()
                 }
             }
         }
@@ -655,8 +655,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val PRE_CACHE_METHOD = "preCache"
         private const val STOP_PRE_CACHE_METHOD = "stopPreCache"
         private const val ACTION_PIP_PLAY_PAUSE = "com.jhomlala.better_player.PIP_PLAY_PAUSE"
-        private const val ACTION_PIP_SKIP_NEXT = "com.jhomlala.better_player.PIP_SKIP_NEXT"
-        private const val ACTION_PIP_SKIP_PREV = "com.jhomlala.better_player.PIP_SKIP_PREV"
-        private const val PIP_SKIP_MS = 10_000
+        private const val ACTION_PIP_SKIP_NEXT = "com.jhomlala.better_player.PIP_NEXT_VIDEO"
+        private const val ACTION_PIP_SKIP_PREV = "com.jhomlala.better_player.PIP_PREV_VIDEO"
     }
 }

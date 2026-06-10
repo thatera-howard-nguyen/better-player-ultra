@@ -75,6 +75,23 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
     );
     // Register the GlobalKey so the PiP button in the controls layer can resolve the render box.
     _controller.setBetterPlayerGlobalKey(_betterPlayerKey);
+
+    _controller.addEventsListener(_onPlayerEvent);
+  }
+
+  void _onPlayerEvent(BetterPlayerEvent event) {
+    switch (event.betterPlayerEventType) {
+      case BetterPlayerEventType.pipNext:
+        final next = _selectedIndex + 1;
+        if (next < _videos.length) _playVideo(next);
+        break;
+      case BetterPlayerEventType.pipPrevious:
+        final prev = _selectedIndex - 1;
+        if (prev >= 0) _playVideo(prev);
+        break;
+      default:
+        break;
+    }
   }
 
   BetterPlayerDataSource _buildDataSource(String url) {
@@ -105,6 +122,7 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
 
   @override
   void dispose() {
+    _controller.removeEventsListener(_onPlayerEvent);
     _controller.dispose();
     super.dispose();
   }
