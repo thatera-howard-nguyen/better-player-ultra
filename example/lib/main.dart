@@ -52,19 +52,46 @@ class BetterPlayerDemo extends StatefulWidget {
 
 class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
   late final BetterPlayerController _controller;
+  // iOS PiP requires a GlobalKey on the BetterPlayer widget to locate its render box.
+  final GlobalKey _betterPlayerKey = GlobalKey();
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _controller = BetterPlayerController(
-      const BetterPlayerConfiguration(
+      BetterPlayerConfiguration(
         autoPlay: true,
         looping: false,
         autoDetectFullscreenDeviceOrientation: true,
+        controlsConfiguration: BetterPlayerControlsConfiguration(
+          controlBarColor: Colors.black.withValues(alpha: 0.2),
+          playerTheme: BetterPlayerTheme.material,
+          // Show the Picture-in-Picture button in the controls overflow menu.
+          enablePip: true,
+        ),
       ),
       betterPlayerDataSource: _buildDataSource(_videos[_selectedIndex].url),
     );
+    // Register the GlobalKey so the PiP button in the controls layer can resolve the render box.
+    _controller.setBetterPlayerGlobalKey(_betterPlayerKey);
+
+    _controller.addEventsListener(_onPlayerEvent);
+  }
+
+  void _onPlayerEvent(BetterPlayerEvent event) {
+    switch (event.betterPlayerEventType) {
+      case BetterPlayerEventType.pipNext:
+        final next = _selectedIndex + 1;
+        if (next < _videos.length) _playVideo(next);
+        break;
+      case BetterPlayerEventType.pipPrevious:
+        final prev = _selectedIndex - 1;
+        if (prev >= 0) _playVideo(prev);
+        break;
+      default:
+        break;
+    }
   }
 
   BetterPlayerDataSource _buildDataSource(String url) {
@@ -81,8 +108,21 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
     _controller.play();
   }
 
+  Future<void> _enterPip() async {
+    final isSupported = await _controller.isPictureInPictureSupported();
+    if (!isSupported) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Picture in Picture is not available')),
+      );
+      return;
+    }
+    await _controller.enablePictureInPicture(_betterPlayerKey);
+  }
+
   @override
   void dispose() {
+    _controller.removeEventsListener(_onPlayerEvent);
     _controller.dispose();
     super.dispose();
   }
@@ -95,7 +135,18 @@ class _BetterPlayerDemoState extends State<BetterPlayerDemo> {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: BetterPlayer(controller: _controller),
+            child: BetterPlayer(
+              key: _betterPlayerKey,
+              controller: _controller,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _enterPip,
+              icon: const Icon(Icons.picture_in_picture_alt),
+              label: const Text('Picture in Picture'),
+            ),
           ),
           const Divider(height: 1),
           Expanded(

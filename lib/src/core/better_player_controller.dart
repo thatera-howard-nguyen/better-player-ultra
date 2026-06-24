@@ -806,10 +806,16 @@ class BetterPlayerController {
 
   ///Enable/disable controls (when enabled = false, controls will be always hidden)
   void setControlsEnabled(bool enabled) {
-    if (!enabled) {
-      _controlsVisibilityStreamController.add(false);
-    }
     _controlsEnabled = enabled;
+    // Notify the controls widget on BOTH transitions. Previously only the
+    // disable path pushed to the visibility stream; when controls were
+    // re-enabled (e.g. after returning from Picture-in-Picture) nothing told
+    // the controls widget to rebuild, so it stayed collapsed to a SizedBox()
+    // with no gesture detector and tapping the player did nothing. The player
+    // value listener (_updateState) is also gated out while controls are
+    // hidden, so it never self-heals. Pushing here forces the rebuild; we keep
+    // controls hidden (false) so they still appear only on tap, as before.
+    _controlsVisibilityStreamController.add(false);
   }
 
   ///Internal method, used to trigger CONTROLS_VISIBLE or CONTROLS_HIDDEN event
@@ -1088,8 +1094,15 @@ class BetterPlayerController {
   ///state, then video playback will stop. If showNotification is set in data
   ///source or handleLifecycle is false then this logic will be ignored.
   void setAppLifecycleState(AppLifecycleState appLifecycleState) {
+    _appLifecycleState = appLifecycleState;
+    // While Picture in Picture is active the video must keep playing after the
+    // app is backgrounded (the OS keeps the PiP window alive). Pausing here
+    // would stop the PiP playback and force the user to resume manually, so the
+    // automatic lifecycle pause/resume is skipped entirely in PiP mode. (iOS)
+    if (videoPlayerController?.value.isPip == true || _wasInPipMode) {
+      return;
+    }
     if (_isAutomaticPlayPauseHandled()) {
-      _appLifecycleState = appLifecycleState;
       if (appLifecycleState == AppLifecycleState.resumed) {
         if (_wasPlayingBeforePause == true && _isPlayerVisible) {
           play();
@@ -1240,6 +1253,12 @@ class BetterPlayerController {
       case VideoEventType.bufferingEnd:
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.bufferingEnd));
         break;
+      case VideoEventType.pipNext:
+        _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipNext));
+        break;
+      case VideoEventType.pipPrevious:
+        _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipPrevious));
+        break;
       default:
         BetterPlayerUtils.log("Unhandled event type: ${event.eventType}");
         break;
@@ -1259,7 +1278,9 @@ class BetterPlayerController {
     await _setupDataSource(_betterPlayerDataSource!);
     if (_videoPlayerValueOnError != null) {
       final position = _videoPlayerValueOnError!.position;
-      await seekTo(position);
+      if (videoPlayerController?.value.duration != null) {
+        await seekTo(position);
+      }
       await play();
       _videoPlayerValueOnError = null;
     }

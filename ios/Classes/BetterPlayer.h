@@ -28,6 +28,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) NSString* key;
 @property(nonatomic, readonly) int failedCount;
 @property(nonatomic) AVPlayerLayer* _playerLayer;
+///The platform view (UiKitView) whose backing AVPlayerLayer renders the video
+///inline. Held weakly because Flutter owns its lifecycle. Needed to re-bind the
+///player after PiP tears down its own AVPlayerLayer.
+@property(nonatomic, weak) BetterPlayerView* playerView;
 @property(nonatomic) bool _pictureInPicture;
 @property(nonatomic) bool _observersAdded;
 @property(nonatomic) int stalledCount;

@@ -3,10 +3,17 @@
 // found in the LICENSE file.
 package com.jhomlala.better_player
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.PendingIntent
 import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -39,6 +46,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
+    private var pipActionsReceiver: BroadcastReceiver? = null
+    private var pipPlayer: BetterPlayer? = null
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         val loader = FlutterLoader()
         flutterState = FlutterState(
@@ -402,14 +411,25 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
 
     private fun isPictureInPictureSupported(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null && activity!!.packageManager
-            .hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || activity == null) return false
+        if (!activity!!.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return false
+        return try {
+            val flagField = android.content.pm.ActivityInfo::class.java
+                .getDeclaredField("FLAG_SUPPORTS_PICTURE_IN_PICTURE")
+            val flag = flagField.getInt(null)
+            val info = activity!!.packageManager.getActivityInfo(activity!!.componentName, 0)
+            (info.flags and flag) != 0
+        } catch (e: Exception) {
+            true
+        }
     }
 
     private fun enablePictureInPicture(player: BetterPlayer) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             player.setupMediaSession(flutterState!!.applicationContext)
-            activity!!.enterPictureInPictureMode(PictureInPictureParams.Builder().build())
+            pipPlayer = player
+            registerPipActionsReceiver()
+            activity!!.enterPictureInPictureMode(buildPipParams(player))
             startPictureInPictureListenerTimer(player)
             player.onPictureInPictureStatusChanged(true)
         }
@@ -417,9 +437,101 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     private fun disablePictureInPicture(player: BetterPlayer) {
         stopPipHandler()
+        unregisterPipActionsReceiver()
         activity!!.moveTaskToBack(false)
         player.onPictureInPictureStatusChanged(false)
         player.disposeMediaSession()
+    }
+
+    @SuppressLint("NewApi")
+    private fun buildPipParams(player: BetterPlayer): PictureInPictureParams {
+        return PictureInPictureParams.Builder()
+            .setActions(buildPipActions(player.isPlaying()))
+            .build()
+    }
+
+    @SuppressLint("NewApi")
+    private fun buildPipActions(isPlaying: Boolean): List<RemoteAction> {
+        val context = flutterState!!.applicationContext
+        val actions = mutableListOf<RemoteAction>()
+
+        val prevIntent = PendingIntent.getBroadcast(
+            context, 0,
+            Intent(ACTION_PIP_SKIP_PREV).setPackage(context.packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        actions.add(RemoteAction(
+            Icon.createWithResource(context, android.R.drawable.ic_media_previous),
+            "Previous", "Previous video",
+            prevIntent
+        ))
+
+        val playPauseIcon = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+        val playPauseTitle = if (isPlaying) "Pause" else "Play"
+        val playPauseIntent = PendingIntent.getBroadcast(
+            context, 1,
+            Intent(ACTION_PIP_PLAY_PAUSE).setPackage(context.packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        actions.add(RemoteAction(
+            Icon.createWithResource(context, playPauseIcon),
+            playPauseTitle, playPauseTitle,
+            playPauseIntent
+        ))
+
+        val nextIntent = PendingIntent.getBroadcast(
+            context, 2,
+            Intent(ACTION_PIP_SKIP_NEXT).setPackage(context.packageName),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        actions.add(RemoteAction(
+            Icon.createWithResource(context, android.R.drawable.ic_media_next),
+            "Next", "Next video",
+            nextIntent
+        ))
+
+        return actions
+    }
+
+    private fun registerPipActionsReceiver() {
+        if (pipActionsReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val player = pipPlayer ?: return
+                when (intent?.action) {
+                    ACTION_PIP_PLAY_PAUSE -> {
+                        if (player.isPlaying()) player.pause() else player.play()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            activity?.setPictureInPictureParams(buildPipParams(player))
+                        }
+                    }
+                    ACTION_PIP_SKIP_NEXT -> player.onPipNextVideo()
+                    ACTION_PIP_SKIP_PREV -> player.onPipPreviousVideo()
+                }
+            }
+        }
+        val filter = IntentFilter().apply {
+            addAction(ACTION_PIP_PLAY_PAUSE)
+            addAction(ACTION_PIP_SKIP_NEXT)
+            addAction(ACTION_PIP_SKIP_PREV)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity?.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            activity?.registerReceiver(receiver, filter)
+        }
+        pipActionsReceiver = receiver
+    }
+
+    private fun unregisterPipActionsReceiver() {
+        pipActionsReceiver?.let {
+            try {
+                activity?.unregisterReceiver(it)
+            } catch (_: Exception) {
+            }
+            pipActionsReceiver = null
+        }
+        pipPlayer = null
     }
 
     private fun startPictureInPictureListenerTimer(player: BetterPlayer) {
@@ -431,6 +543,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 } else {
                     player.onPictureInPictureStatusChanged(false)
                     player.disposeMediaSession()
+                    unregisterPipActionsReceiver()
                     stopPipHandler()
                 }
             }
@@ -545,5 +658,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         private const val DISPOSE_METHOD = "dispose"
         private const val PRE_CACHE_METHOD = "preCache"
         private const val STOP_PRE_CACHE_METHOD = "stopPreCache"
+        private const val ACTION_PIP_PLAY_PAUSE = "com.jhomlala.better_player.PIP_PLAY_PAUSE"
+        private const val ACTION_PIP_SKIP_NEXT = "com.jhomlala.better_player.PIP_NEXT_VIDEO"
+        private const val ACTION_PIP_SKIP_PREV = "com.jhomlala.better_player.PIP_PREV_VIDEO"
     }
 }

@@ -526,6 +526,19 @@ internal class BetterPlayer(
         exoPlayer?.playWhenReady = false
     }
 
+    fun isPlaying(): Boolean = exoPlayer?.isPlaying == true
+
+    fun seekForward(millis: Int) {
+        val position = exoPlayer?.currentPosition ?: 0
+        val duration = exoPlayer?.duration ?: 0
+        exoPlayer?.seekTo(if (duration > 0) min(position + millis, duration) else position + millis)
+    }
+
+    fun seekBackward(millis: Int) {
+        val position = exoPlayer?.currentPosition ?: 0
+        exoPlayer?.seekTo(max(position - millis, 0))
+    }
+
     fun setLooping(value: Boolean) {
         exoPlayer?.repeatMode = if (value) Player.REPEAT_MODE_ALL else Player.REPEAT_MODE_OFF
     }
@@ -640,6 +653,18 @@ internal class BetterPlayer(
     fun onPictureInPictureStatusChanged(inPip: Boolean) {
         val event: MutableMap<String, Any> = HashMap()
         event["event"] = if (inPip) "pipStart" else "pipStop"
+        eventSink.success(event)
+    }
+
+    fun onPipNextVideo() {
+        val event: MutableMap<String, Any> = HashMap()
+        event["event"] = "pipNext"
+        eventSink.success(event)
+    }
+
+    fun onPipPreviousVideo() {
+        val event: MutableMap<String, Any> = HashMap()
+        event["event"] = "pipPrevious"
         eventSink.success(event)
     }
 
