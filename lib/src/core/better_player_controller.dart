@@ -1278,7 +1278,9 @@ class BetterPlayerController {
     await _setupDataSource(_betterPlayerDataSource!);
     if (_videoPlayerValueOnError != null) {
       final position = _videoPlayerValueOnError!.position;
-      await seekTo(position);
+      if (videoPlayerController?.value.duration != null) {
+        await seekTo(position);
+      }
       await play();
       _videoPlayerValueOnError = null;
     }

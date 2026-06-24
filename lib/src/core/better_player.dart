@@ -363,6 +363,7 @@ class _BetterPlayerState extends State<BetterPlayer>
 
   // ignore: avoid_void_async
   Future<void> onFullScreenChanged() async {
+    if (!mounted) return;
     final controller = widget.controller;
     if (controller.isFullScreen && !_isFullScreen) {
       _isFullScreen = true;
@@ -370,6 +371,7 @@ class _BetterPlayerState extends State<BetterPlayer>
           .postEvent(BetterPlayerEvent(BetterPlayerEventType.openFullscreen));
       await _pushFullScreenWidget(context);
     } else if (_isFullScreen) {
+      if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
       _isFullScreen = false;
       controller
