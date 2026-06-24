@@ -515,7 +515,11 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             addAction(ACTION_PIP_SKIP_NEXT)
             addAction(ACTION_PIP_SKIP_PREV)
         }
-        activity?.registerReceiver(receiver, filter)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity?.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            activity?.registerReceiver(receiver, filter)
+        }
         pipActionsReceiver = receiver
     }
 
