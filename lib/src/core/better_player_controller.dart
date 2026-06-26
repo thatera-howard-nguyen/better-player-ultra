@@ -223,7 +223,10 @@ class BetterPlayerController {
         betterPlayerConfiguration.controlsConfiguration;
     _eventListeners.add(eventListener);
     if (betterPlayerDataSource != null) {
-      setupDataSource(betterPlayerDataSource);
+      setupDataSource(betterPlayerDataSource).catchError((_) {
+        // Error is already surfaced via videoPlayerController.value.hasError
+        // and displayed by the errorBuilder or default error widget.
+      });
     }
   }
 
@@ -548,7 +551,11 @@ class BetterPlayerController {
         }
         break;
     }
-    await _initializeVideo();
+    try {
+      await _initializeVideo();
+    } catch (e) {
+      BetterPlayerUtils.log("Failed to initialize video: $e");
+    }
   }
 
   ///Create file from provided list of bytes. File will be created in temporary
