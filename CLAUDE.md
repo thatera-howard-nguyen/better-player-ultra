@@ -64,6 +64,11 @@ The `video_player` method channel is the **only** boundary. Adding a native capa
 - Public API additions must be exported from `lib/better_player.dart` to be visible to plugin consumers.
 - Specs/design notes for in-progress features live under `docs/` (e.g. `docs/double_tap_spec.md` describes the 40/20/40 double-tap seek behavior, accumulation grace window, and overlay rules — consult it before changing tap-zone logic in the controls layer).
 
+## GitHub / PR rules
+
+- This repo has two remotes: `origin` = `thatera-howard-nguyen/better-player-ultra` (the working fork), `upstream` = `Lo4D/better-player-ultra` (original). `gh` may auto-detect `upstream` as the base.
+- **Always** create PRs against `thatera-howard-nguyen/better-player-ultra` using the explicit flag: `gh pr create --repo thatera-howard-nguyen/better-player-ultra ...`
+
 ## Testing notes
 
 - Tests under `test/` use the local mocks `mock_video_player_controller.dart`, `mock_method_channel.dart`, and `better_player_mock_controller.dart` — prefer extending these rather than introducing a new mocking framework.
