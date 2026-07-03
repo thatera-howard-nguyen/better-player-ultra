@@ -57,8 +57,9 @@ class BetterPlayerDataSource {
   ///Duration which will be returned instead of original duration
   final Duration? overriddenDuration;
 
-  ///Video format hint when data source url has not valid extension.
-  final BetterPlayerVideoFormat? videoFormat;
+  ///Video format. Defaults to [BetterPlayerVideoFormat.auto], which detects
+  ///the format from the URL/file extension at playback time.
+  final BetterPlayerVideoFormat videoFormat;
 
   ///Extension of video without dot.
   final String? videoExtension;
@@ -94,7 +95,7 @@ class BetterPlayerDataSource {
       showNotification: false,
     ),
     this.overriddenDuration,
-    this.videoFormat,
+    this.videoFormat = BetterPlayerVideoFormat.auto,
     this.videoExtension,
     this.drmConfiguration,
     this.placeholder,
@@ -140,7 +141,7 @@ class BetterPlayerDataSource {
       cacheConfiguration: cacheConfiguration,
       notificationConfiguration: notificationConfiguration,
       overriddenDuration: overriddenDuration,
-      videoFormat: videoFormat,
+      videoFormat: videoFormat ?? BetterPlayerVideoFormat.auto,
       drmConfiguration: drmConfiguration,
       placeholder: placeholder,
       bufferingConfiguration: bufferingConfiguration,
