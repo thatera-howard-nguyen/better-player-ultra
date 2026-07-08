@@ -52,17 +52,40 @@ The public API surface is re-exported from `lib/better_player.dart`. Everything 
 
 ### Event flow
 
-`BetterPlayerController` exposes a `Stream<BetterPlayerEvent>` (typed by `BetterPlayerEventType`). Almost everything UI cares about — buffering, play/pause, seek, fullscreen toggles, control visibility, errors — flows through this stream. New features should emit appropriate events instead of relying on direct widget callbacks.
+`BetterPlayerController` exposes two separate notification mechanisms — pick the right one:
+
+- **`betterPlayerEventStream`** (`Stream<BetterPlayerEvent>`, typed by `BetterPlayerEventType`) — the primary public stream. Use this in UI widgets and feature code. New features should emit appropriate events here instead of relying on widget callbacks.
+- **`addEventsListener()` / `removeEventsListener()`** — registers a callback into an internal listener list. The controller also holds an internal config listener at index 0; `eventListeners` getter skips it via `.skip(1)`. Prefer the stream for new code; use the listener API only when you need to register from outside the widget tree.
+
+Additional controller streams: `controlsVisibilityStream` (controls show/hide), `nextVideoTimeStream` (playlist countdown). These are not part of `BetterPlayerEvent` — listen to them separately if you need that state.
 
 ### Native ↔ Dart boundary
 
-The `video_player` method channel is the **only** boundary. Adding a native capability requires changes in three places: `MethodChannelVideoPlayer` (Dart), `BetterPlayer.m` / `BetterPlayerPlugin.m` (iOS), and the Kotlin sources under `android/src/main/kotlin/`. Higher-level Dart code should never assume a platform — it goes through `VideoPlayerController` (vendored).
+The `video_player` method channel (named **`better_player_channel`**) is the **only** boundary. Adding a native capability requires changes in three places: `MethodChannelVideoPlayer` (Dart), `BetterPlayer.m` / `BetterPlayerPlugin.m` (iOS), and the Kotlin sources under `android/src/main/kotlin/`. Higher-level Dart code should never assume a platform — it goes through `VideoPlayerController` (vendored).
+
+Caching is platform-asymmetric: Android uses ExoPlayer's `SimpleCache` with a custom `DataSourceFactory`; iOS uses `HLSCachingReverseProxyServer` (a local HTTP proxy). The Android cache is managed from Dart via `BetterPlayerCacheConfiguration`; on iOS it is set up natively.
+
+### Quality switching
+
+Two independent mechanisms exist — do not conflate them:
+
+- **ASMS tracks** (`setTrack()`) — HLS/DASH adaptive-quality switching; parsed from the manifest into `BetterPlayerAsmsTrack` / `BetterPlayerAsmsAudioTrack` lists.
+- **Alternative resolutions** (`setResolution()`) — a `Map<String, String>` of label → URL on `BetterPlayerDataSource`; used for non-adaptive multi-file quality switching without ASMS.
+
+### Dispose pattern
+
+`dispose({bool forceDispose = false})` is non-trivial: the controller owns multiple `StreamController`s and `StreamSubscription`s that must be closed/cancelled in order. The `forceDispose` flag bypasses the lifecycle guard (needed when `handleLifecycle: true` but you want immediate teardown). Prefer calling `dispose()` on the controller before the widget tree tears down to avoid stream leaks that the lint rules (`close_sinks`, `cancel_subscriptions`) will flag.
 
 ## Conventions
 
 - Lint rules live in `analysis_options.yaml` and extend `package:lint`. Notable enforced rules: `prefer_const_constructors`, `prefer_const_declarations`, `avoid_dynamic_calls`, `close_sinks`, `cancel_subscriptions`. Disabled (intentionally): `sort_constructors_first`, `sized_box_for_whitespace`, `sort_pub_dependencies`, `avoid_unnecessary_containers`.
 - Public API additions must be exported from `lib/better_player.dart` to be visible to plugin consumers.
 - Specs/design notes for in-progress features live under `docs/` (e.g. `docs/double_tap_spec.md` describes the 40/20/40 double-tap seek behavior, accumulation grace window, and overlay rules — consult it before changing tap-zone logic in the controls layer).
+
+## GitHub / PR rules
+
+- This repo has two remotes: `origin` = `thatera-howard-nguyen/better-player-ultra` (the working fork), `upstream` = `Lo4D/better-player-ultra` (original). `gh` may auto-detect `upstream` as the base.
+- **Always** create PRs against `thatera-howard-nguyen/better-player-ultra` using the explicit flag: `gh pr create --repo thatera-howard-nguyen/better-player-ultra ...`
 
 ## Testing notes
 

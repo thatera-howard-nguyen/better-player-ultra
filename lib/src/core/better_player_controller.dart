@@ -436,11 +436,10 @@ class BetterPlayerController {
   ///Get VideoFormat from BetterPlayerVideoFormat (adapter method which translates
   ///to video_player supported format).
   VideoFormat? _getVideoFormat(
-      BetterPlayerVideoFormat? betterPlayerVideoFormat) {
-    if (betterPlayerVideoFormat == null) {
-      return null;
-    }
+      BetterPlayerVideoFormat betterPlayerVideoFormat, String url) {
     switch (betterPlayerVideoFormat) {
+      case BetterPlayerVideoFormat.auto:
+        return _detectVideoFormatFromUrl(url);
       case BetterPlayerVideoFormat.dash:
         return VideoFormat.dash;
       case BetterPlayerVideoFormat.hls:
@@ -450,6 +449,17 @@ class BetterPlayerController {
       case BetterPlayerVideoFormat.other:
         return VideoFormat.other;
     }
+  }
+
+  ///Detect VideoFormat from URL/file extension for [BetterPlayerVideoFormat.auto].
+  VideoFormat? _detectVideoFormatFromUrl(String url) {
+    final lowerUrl = url.toLowerCase();
+    if (lowerUrl.contains('.m3u8')) return VideoFormat.hls;
+    if (lowerUrl.contains('.mpd')) return VideoFormat.dash;
+    if (lowerUrl.contains('.ism') || lowerUrl.contains('.isml')) {
+      return VideoFormat.ss;
+    }
+    return null;
   }
 
   ///Internal method which invokes videoPlayerController source setup.
@@ -477,7 +487,8 @@ class BetterPlayerController {
             notificationChannelName: _betterPlayerDataSource
                 ?.notificationConfiguration?.notificationChannelName,
             overriddenDuration: _betterPlayerDataSource!.overriddenDuration,
-            formatHint: _getVideoFormat(_betterPlayerDataSource!.videoFormat),
+            formatHint: _getVideoFormat(_betterPlayerDataSource!.videoFormat,
+                _betterPlayerDataSource!.url),
             licenseUrl: _betterPlayerDataSource?.drmConfiguration?.licenseUrl,
             certificateUrl:
                 _betterPlayerDataSource?.drmConfiguration?.certificateUrl,

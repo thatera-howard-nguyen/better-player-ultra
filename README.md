@@ -1,34 +1,54 @@
 # Better Player Ultra
 
-## Important information
+A Flutter plugin for advanced video playback on Android and iOS. Fork of [better_player](https://github.com/jhomlala/betterplayer) with continued development and additional features.
 
-This plugin development is in progress. You may encounter breaking changes each version. This plugin is developed part-time for free. If you need some feature which is supported by other players available in pub dev, then feel free to create PR. All valuable contributions are welcome!
+## Features
 
-## Introduction
+- HLS and DASH adaptive streaming (track, audio, and subtitle selection)
+- Subtitles: SRT, WEBVTT with HTML tags, HLS-segmented, multiple tracks
+- DRM: token, Widevine, FairPlay (EZDRM), ClearKey
+- Picture-in-Picture (Android and iOS)
+- Playlist and ListView autoplay support
+- Cache support
+- Alternative resolution switching
+- Playback speed control
+- HTTP headers and custom aspect ratio / BoxFit
+- Lock screen / notification controls
+- Material and Cupertino control variants
 
-This plugin is based on [Chewie](https://github.com/brianegan/chewie). Chewie is awesome plugin and works well in many cases. Better Player is a continuation of ideas introduced in Chewie. Better player fix common bugs, adds more configuration options and solves typical use cases.
+## Installation
 
-**Features:**  
-✔️ Fixed common bugs  
-✔️ Added advanced configuration options  
-✔️ Refactored player controls  
-✔️ Playlist support  
-✔️ Video in ListView support  
-✔️ Subtitles support: (formats: SRT, WEBVTT with HTML tags support; subtitles from HLS; multiple subtitles for video)  
-✔️ HTTP Headers support  
-✔️ BoxFit of video support  
-✔️ Playback speed support  
-✔️ HLS support (track, subtitles (also segmented), audio track selection)  
-✔️ DASH support (track, subtitles, audio track selection)  
-✔️ Alternative resolution support  
-✔️ Cache support  
-✔️ Notifications support  
-✔️ Picture in Picture support  
-✔️ DRM support (token, Widevine, FairPlay EZDRM).  
-✔️ ... and much more!
+Add to your `pubspec.yaml`:
 
-## Documentation
+```yaml
+dependencies:
+  better_player:
+    git:
+      url: https://github.com/thatera-howard-nguyen/better-player-ultra.git
+```
 
-- [Official documentation](https://jhomlala.github.io/betterplayer/)
-- [Example application](https://github.com/jhomlala/betterplayer/tree/master/example)
-- [API reference](https://pub.dev/documentation/better_player/latest/better_player/better_player-library.html)
+Then run `flutter pub get`.
+
+## Basic usage
+
+```dart
+BetterPlayerController controller = BetterPlayerController(
+  const BetterPlayerConfiguration(autoPlay: true),
+  betterPlayerDataSource: BetterPlayerDataSource(
+    BetterPlayerDataSourceType.network,
+    'https://example.com/video.m3u8',
+  ),
+);
+
+BetterPlayer(controller: controller);
+```
+
+Dispose the controller when done:
+
+```dart
+controller.dispose();
+```
+
+## Example app
+
+See the `example/` directory for a full working demo.
